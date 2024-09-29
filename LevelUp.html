@@ -7,31 +7,40 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    </div>
     <!--main window content --> 
-    <div id="mainContent" style="display: none;"> 
-        <h1>Level Up</h1> 
-    <div id="checkboxes" class="checkbox-container"></div>
-    <button onclick="calcExp()">Get EXP!</button> 
-    <p id="totalExpDisplay">Total Experience: 0</p> 
-    <progress id="progressBar" value="0" max="500"></progress> 
-    <button onclick="window.close()">Go out and earn more!</button> 
+    <div id="mainContent" style="display: none;">
+        <h1>Level Up</h1>
+        <div id="addExperienceForm">
+            <h3>Add New Experience</h3>
+            <input type="text" id="newExpName" placeholder="Experience Name">
+            <input type="number" id="newExpValue" placeholder="Experience Value">
+            <button id="addExperienceButton">Add Experience</button>
+            <button id="calcExpButton">Get EXP!</button>
+        </div>
+        <div id="experienceContainer"></div>
+        <div id="checkboxes" class="checkbox-container"></div>
+        <button onclick="calcExp()">Get EXP!</button>
+        <p id="totalExpDisplay">Total Experience: 0</p>
+        <progress id="progressBar" value="0" max="13392"></progress>
     </div>
+
     <!--Log in form page content-->
     <div id="loginForm">
         <h2>Login</h2>
-        <input type="text" name="username" id ="username" placeholder="Username" autocomplete="off" required>
-        <input type="password" name="password" id ="password" placeholder="Password" autocomplete="off" required>
-        <button onclick="login()">Login</button>
-        <button onclick="showRegister()">Register</button>
+        <input type="text" name="username" id="username" placeholder="Username" autocomplete="off" required>
+        <input type="password" name="password" id="password" placeholder="Password" autocomplete="off" required>
+        <button id="loginButton">Login</button>
+        <button id="registerButton">Register</button>
     </div>
+
     <!--register window content -->
     <div id="registerForm" style="display: none;">
         <h2>Register</h2>
         <input type="text" id="newUsername" placeholder="Username" required>
         <input type="password" id="newPassword" placeholder="Password" required>
-        <button onclick="register()">Register</button>
-        <button onclick="showLogin()">Back to Login</button>
+        <button id="registerSubmitButton">Register</button>
+<button id="backToLoginButton">Back to Login</button>
+    </div>
 
     <script src="javascript.js"></script>
 </body>

@@ -1,109 +1,109 @@
 
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #007932;
-            --background-color: #000000;
-            --text-color: #333;
-        }
-        body {
-            font-family: 'Roboto', Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            background-color: var(--background-color);
-            color: var(--secondary-color);
-            line-height: 1.6;
-        }
-        h1 {
-            color: var(--secondary-color);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .checkbox-container {
-            background-color: var(--text-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px, var(--secondary-color);
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .checkbox-item input[type="checkbox"] {
-            margin-right: 10px;
-        }
-        progress {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        progress::-webkit-progress-bar {
-            background-color: var(--text-color);
-            border-radius: 5px;
-        }
-        progress::-webkit-progress-value {
-            background-color: var(--secondary-color);
-            border-radius: 5px;
-        }
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            display: block;
-            margin: 20px auto;
-        }
-        #totalExpDisplay {
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    
-        .checkbox-container {
-            animation: fadeIn 0.5s ease-out;
-        }
-    
-        button {
-            transition: transform 0.2s;
-        }
-    
-        button:active {
-            transform: scale(0.90);
-        }
-        #loginForm {
-            background-color: var(--text-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-            margin: 100px auto;
-        }
-        #loginForm input {
-            width: 92.5%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #loginForm button {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #mainContent {
-            display: none;
-        }
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #007932;
+    --background-color: #000000;
+    --text-color: #333;
+}
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    background-color: var(--background-color);
+    color: var(--secondary-color);
+    line-height: 1.6;
+}
+h1 {
+    color: var(--secondary-color);
+    text-align: center;
+    margin-bottom: 30px;
+}
+.checkbox-container {
+    background-color: var(--text-color);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px, var(--secondary-color);
+}
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+progress {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+progress::-webkit-progress-bar {
+    background-color: var(--text-color);
+    border-radius: 5px;
+}
+progress::-webkit-progress-value {
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+}
+button {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: block;
+    margin: 20px auto;
+}
+#totalExpDisplay {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 20px 0;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.checkbox-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+button {
+    transition: transform 0.2s;
+}
+
+button:active {
+    transform: scale(0.90);
+}
+#loginForm {
+    background-color: var(--text-color);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    margin: 100px auto;
+}
+#loginForm input {
+    width: 92.5%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+#loginForm button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#mainContent {
+    display: none;
+}

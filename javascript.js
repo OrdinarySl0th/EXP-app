@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('editButton').addEventListener('click', editSelectedExperience);
     document.getElementById('deleteButton').addEventListener('click', deleteSelectedExperiences);
     document.getElementById('sendFriendRequestButton').addEventListener('click', sendFriendRequest);
+    document.getElementById('logoutButton').addEventListener('click', logout);
 
     auth.onAuthStateChanged(function(user) {
         if (user) {
@@ -124,10 +125,47 @@ function register() {
 function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(username + '@example.com', password)
+    
+    console.log("Attempting login for username:", username);
+    
+    if (!username || !password) {
+        console.error("Username or password is empty");
+        alert("Please enter both username and password.");
+        return;
+    }
+    auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            console.log("Login successful for user:", userCredential.user.uid);
+            showDashboard();
+        })
         .catch((error) => {
-            alert("Login failed: " + error.message);
+            console.error("Login error:", error.code, error.message);
+            let errorMessage = "Login failed. ";
+            switch(error.code) {
+                case 'auth/user-not-found':
+                    errorMessage += "No user found with this username.";
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage += "Incorrect password.";
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage += "Invalid username format.";
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            alert(errorMessage);
         });
+}
+
+function logout() {
+    auth.signOut().then(() => {
+        console.log("User signed out successfully");
+        currentUser = null;
+        showLogin();
+    }).catch((error) => {
+        console.error("Error signing out:", error);
+    });
 }
 
 function showDashboard() {

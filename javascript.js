@@ -107,7 +107,7 @@ function register() {
         alert("Username and password cannot be empty!");
         return;
     }
-    auth.createUserWithEmailAndPassword(username + '@example.com', password)
+    auth.createUserWithEmailAndPassword(username, password)
         .then((userCredential) => {
             return userCredential.user.updateProfile({
                 displayName: username

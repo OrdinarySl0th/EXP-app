@@ -13,7 +13,7 @@
         <h2>Login</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <button id="loginButton">Login</button>
+        <button id="loginButton" onclick=login()>Login</button>
         <button id="registerButton">Register</button>
     </div>
 
@@ -43,7 +43,24 @@
         <div id="checkboxes"></div>
         <button id="logoutButton" onclick="window.close()">Go Earn More</button>
     </div>
-
+    <div id="friendsSection">
+        <h2>Friends</h2>
+        <input type="text" id="friendUsername" placeholder="Friend's username">
+        <button id="sendFriendRequestButton">Send Friend Request</button>
+        <div id="friendRequests"></div>
+        <div id="friendsList"></div>
+    </div>
+    <div id="levelUpModal" class="modal">
+        <div class="modal-content">
+            <h2>You Leveled Up!</h2>
+            <p>Congratulations! You've reached level <span id="newLevel"></span>!</p>
+            <p>Go treat yourself, you've earned it!</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="javascript.js"></script>
 </body>
 </html>

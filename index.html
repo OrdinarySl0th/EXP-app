@@ -4,23 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Level Up</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-    <h1>Level Up</h1>
-
     <div id="loginForm">
         <h2>Login</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <button id="loginButton" onclick=login()>Login</button>
+        <button id="loginButton">Login</button>
         <button id="registerButton">Register</button>
     </div>
 
     <div id="registerForm" style="display: none;">
         <h2>Register</h2>
-        <input type="text" id="newUsername" placeholder="New Username">
-        <input type="password" id="newPassword" placeholder="New Password">
+        <input type="text" id="newUsername" placeholder="Username">
+        <input type="password" id="newPassword" placeholder="Password">
         <button id="registerSubmitButton">Register</button>
         <button id="backToLoginButton">Back to Login</button>
     </div>
@@ -33,24 +34,26 @@
 
         <h2>Your Experiences</h2>
         <div id="experienceContainer"></div>
+
         <div class="button-container">
-            <button id="calcExpButton" class="left-button">Get EXP!</button>
-            <button id="editButton" class="middle-button">Edit Selected</button>
-            <button id="deleteButton" class="right-button">Delete Selected</button>
+            <button id="calcExpButton">Get EXP!</button>
+            <button id="editButton">Edit Selected</button>
+            <button id="deleteButton">Delete Selected</button>
         </div>
+        <button id="logoutButton" style="display: none;">Logout</button>
         <p id="totalExpDisplay">Total Experience: 0</p>
         <progress id="progressBar" value="0" max="100"></progress>
-        <div id="checkboxes"></div>
-        <button id="logoutButton" onclick="window.close()">Go Earn More</button>
+
+        <div id="friendsSection">
+            <h2>Friends</h2>
+            <input type="text" id="friendUsername" placeholder="Friend's Username">
+            <button id="sendFriendRequestButton">Send Friend Request</button>
+            <div id="friendRequests"></div>
+            <div id="friendsList"></div>
+        </div>
     </div>
-    <div id="friendsSection">
-        <h2>Friends</h2>
-        <input type="text" id="friendUsername" placeholder="Friend's username">
-        <button id="sendFriendRequestButton">Send Friend Request</button>
-        <div id="friendRequests"></div>
-        <div id="friendsList"></div>
-    </div>
-    <div id="levelUpModal" class="modal">
+
+    <div id="levelUpModal" class="modal" style="display: none;">
         <div class="modal-content">
             <h2>You Leveled Up!</h2>
             <p>Congratulations! You've reached level <span id="newLevel"></span>!</p>
@@ -58,9 +61,7 @@
             <button id="closeModal">Close</button>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
     <script src="javascript.js"></script>
 </body>
 </html>

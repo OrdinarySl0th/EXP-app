@@ -27,22 +27,20 @@
 
     <div id="mainContent" style="display: none;">
         <h2>Add New Experience</h2>
-<input type="text" id="newExpName" placeholder="Experience Name">
-<input type="number" id="newExpValue" placeholder="Experience Value">
-<button id="addExperienceButton" onclick="addNewExperience()">Add Experience</button>
+        <input type="text" id="newExpName" placeholder="Experience Name">
+        <input type="number" id="newExpValue" placeholder="Experience Value">
+        <button id="addExperienceButton">Add Experience</button>
 
         <h2>Your Experiences</h2>
         <div id="experienceContainer"></div>
-        <button id="editButton">Edit Selected</button>
-        <button id="deleteButton">Delete Selected</button>
-
-        <h2>Total Experience</h2>
+        <div class="button-container">
+            <button id="calcExpButton" class="left-button">Get EXP!</button>
+            <button id="editButton" class="middle-button">Edit Selected</button>
+            <button id="deleteButton" class="right-button">Delete Selected</button>
+        </div>
         <p id="totalExpDisplay">Total Experience: 0</p>
-        <progress id="progressBar" value="0" max="13392"></progress>
-
+        <progress id="progressBar" value="0" max="100"></progress>
         <div id="checkboxes"></div>
-        <button id="calcExpButton" onclick="calcExp()">Get EXP!</button>
-
         <button id="logoutButton" onclick="window.close()">Go Earn More</button>
     </div>
 

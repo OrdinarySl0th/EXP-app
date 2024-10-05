@@ -78,7 +78,7 @@ button {
 }
 
 button:active {
-    transform: scale(0.90);
+    transform: scale(0.75);
 }
 #loginForm {
     background-color: var(--text-color);
@@ -106,4 +106,16 @@ button:active {
 }
 #mainContent {
     display: none;
+}
+
+.button-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+.left-button {
+    justify-self: start;
+}
+.right-button {
+    justify-self: end;
 }

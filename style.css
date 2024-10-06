@@ -60,8 +60,8 @@ h1 {
 
 progress {
     width: 100%;
-    height: 10px;
-    border-radius: 5px;
+    height: 15px;
+    border-radius: 25px;
     margin: 20px 0;
     overflow: hidden;
 }
@@ -71,7 +71,7 @@ progress::-webkit-progress-bar {
 }
 
 progress::-webkit-progress-value {
-    background: linear-gradient(90deg, var(--secondary-color), #00a86b);
+    background: linear-gradient(85deg, var(--secondary-color), #00a86b);
     transition: width 1.25s ease-out;
 }
 
@@ -82,41 +82,33 @@ progress::-webkit-progress-value {
     margin: 20px 0;
 }
 
-.action-button {
-    flex: 1;
+button:active {
+    transform: scale(0.75);
+}
+
+/* Specific button styles */
+.action-button,
+.primary-button,
+.secondary-button,
+.left-button,
+.right-button,
+.middle-button,
+.logout-button,
+#calcExpButton {
     background-color: var(--secondary-color);
-    color: var(--secondary-color);
+    color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
+    font-size: 1em;
 }
 
-.action-button::after {
-    content: '';
+.logout-button {
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.action-button:hover::after {
-    opacity: 1;
-}
-
-.action-button:active {
-    transform: scale(0.95);
-}
-
-#calcExpButton {
-    background-color: var(--secondary-color);
+    top: 20px;
+    right: 20px;
 }
 
 #totalExpDisplay {
@@ -129,21 +121,42 @@ progress::-webkit-progress-value {
     background-clip: text;
     color: transparent;
 }
-.logout-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s;
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
 }
 
-.logout-button:hover {
-    background-color: #005722; /* Darker shade of the secondary color */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+#closeModal {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#closeModal:hover {
+    background-color: #45a049;
 }
 
 /* Add more enhanced styles for other elements as needed */

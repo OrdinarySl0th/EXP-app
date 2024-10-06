@@ -1,11 +1,11 @@
 // Initialize Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDVzWNYl124OuuN6Cxy8xPJKZYCoNHUEZ8",
-  authDomain: "levelup-8b1fa.firebaseapp.com",
-  databaseURL: "https://levelup-8b1fa-default-rtdb.firebaseio.com",
-  projectId: "levelup-8b1fa",
-  storageBucket: "levelup-8b1fa.appspot.com",
-  messagingSenderId: "271893990172",
+    apiKey: "AIzaSyDVzWNYl124OuuN6Cxy8xPJKZYCoNHUEZ8",
+    authDomain: "levelup-8b1fa.firebaseapp.com",
+    databaseURL: "https://levelup-8b1fa-default-rtdb.firebaseio.com",
+    projectId: "levelup-8b1fa",
+    storageBucket: "levelup-8b1fa.appspot.com",
+    messagingSenderId: "271893990172",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -13,7 +13,6 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 // Global variables
-let currentUser = null;
 let maxExp = 100;
 
 // Classes
@@ -77,11 +76,27 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('calcExpButton').addEventListener('click', calcExp);
     document.getElementById('editButton').addEventListener('click', editSelectedExperience);
     document.getElementById('deleteButton').addEventListener('click', deleteSelectedExperiences);
-    document.getElementById('sendFriendRequestButton').addEventListener('click', sendFriendRequest);
     document.getElementById('logoutButton').addEventListener('click', logout);
+    })
 
-    auth.onAuthStateChanged(function(user) {
-        if (user) {
+let currentUser = null;
+
+auth.onAuthStateChanged(function(user) {
+    if (user) {
+        if (!currentUser) {
+            currentUser = {
+                uid: user.uid,
+                displayName: user.displayName,
+                tracker: new ExperienceTracker(),
+                totalAccumulatedExp: 0,
+                friends: [],
+                friendRequests: []
+            };
+            loadUserData(currentUser).then(() => {
+                showDashboard();
+            });
+        } else if (currentUser.uid !== user.uid) {
+            // User has changed, reload data
             currentUser = {
                 uid: user.uid,
                 displayName: user.displayName,
@@ -94,9 +109,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 showDashboard();
             });
         } else {
-            showLogin();
+            // User is the same, just show dashboard
+            showDashboard();
         }
-    });
+    } else {
+        currentUser = null;
+        showLogin();
+    }
 });
 
 // User management functions
@@ -159,13 +178,26 @@ function login() {
 }
 
 function logout() {
-    auth.signOut().then(() => {
-        console.log("User signed out successfully");
-        currentUser = null;
-        showLogin();
-    }).catch((error) => {
-        console.error("Error signing out:", error);
-    });
+    if (currentUser) {
+        saveUserData(currentUser)
+            .then(() => {
+                return firebase.auth().signOut();
+            })
+            .then(() => {
+                console.log('User signed out');
+                currentUser = null;
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+            })
+            .catch((error) => {
+                console.error('Logout error', error);
+                alert('An error occurred during logout. Please try again.');
+            });
+    } else {
+        console.log('No user is currently logged in');
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    }
 }
 
 function showDashboard() {
@@ -188,25 +220,59 @@ function showLogin() {
     document.getElementById('loginForm').style.display = 'block';
 }
 
-// Experience functions
+// Add Experience functions
 function addNewExperience() {
+    console.log("addNewExperience function called");
+    if (!currentUser) {
+        console.error("No user is currently logged in");
+        alert("Please log in to add an experience.");
+        return;
+    }
+
     const expName = document.getElementById('newExpName').value.trim();
     const expValue = parseFloat(document.getElementById('newExpValue').value);
+    console.log("Input values:", expName, expValue);
+
     if (!expName || isNaN(expValue)) {
         alert("Please enter a valid experience name and value.");
         return;
     }
-    const newExp = currentUser.tracker.addExperience(expValue, expName);
-    saveUserData(currentUser).then(() => {
-        displayUserExperiences();
-        document.getElementById('newExpName').value = '';
-        document.getElementById('newExpValue').value = '';
-    });
-}
 
-function displayUserExperiences() {
+    const newExp = currentUser.tracker.addExperience(expValue, expName);
+    console.log("New experience added:", newExp);
+
+    // Immediately display the new experience
     const experienceContainer = document.getElementById('experienceContainer');
+    if (experienceContainer) {
+        const expElement = document.createElement('div');
+        expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${newExp.id}"> ${newExp.category}: ${newExp.amount}`;
+        experienceContainer.appendChild(expElement);
+    }
+
+    saveUserData(currentUser)
+        .then(() => {
+            console.log("User data saved successfully");
+            document.getElementById('newExpName').value = '';
+            document.getElementById('newExpValue').value = '';
+        })
+        .catch((error) => {
+            console.error("Error saving user data:", error);
+            alert("Failed to save the new experience. Please try again.");
+        });
+}
+function displayUserExperiences() {
+    console.log("Displaying user experiences");
+    const experienceContainer = document.getElementById('experienceContainer');
+    if (!experienceContainer) {
+        console.error("Experience container not found");
+        return;
+    }
     experienceContainer.innerHTML = '';
+    if (!currentUser || !currentUser.tracker || !currentUser.tracker.experiences) {
+        console.error("User data is not properly initialized");
+        experienceContainer.innerHTML = '<p>Error loading experiences. Please try logging out and back in.</p>';
+        return;
+    }
     if (currentUser.tracker.experiences.length === 0) {
         experienceContainer.innerHTML = '<p>No experiences added yet. Add your first experience above!</p>';
     } else {
@@ -216,6 +282,7 @@ function displayUserExperiences() {
             experienceContainer.appendChild(expElement);
         });
     }
+    console.log("Experiences displayed:", currentUser.tracker.experiences.length);
 }
 
 function editSelectedExperience() {
@@ -256,12 +323,20 @@ function deleteSelectedExperiences() {
 }
 
 function calcExp() {
+    if (!currentUser) {
+        console.error("No user is currently logged in");
+        alert("Please log in to calculate experience.");
+        return;
+    }
+
     const checkboxes = document.querySelectorAll('#experienceContainer input[type="checkbox"]:checked');
     let totalExp = 0;
     checkboxes.forEach(cb => {
         const expId = cb.getAttribute('data-id');
         const experience = currentUser.tracker.experiences.find(exp => exp.id === expId);
-        totalExp += experience.amount;
+        if (experience) {
+            totalExp += experience.amount;
+        }
     });
     const totalChecked = checkboxes.length;
     const finalExp = totalExp * totalChecked;
@@ -271,6 +346,9 @@ function calcExp() {
         checkLevelUp(previousExp, currentUser.totalAccumulatedExp);
         updateTotalExpDisplay();
         checkboxes.forEach(cb => cb.checked = false);
+    }).catch((error) => {
+        console.error("Error saving user data:", error);
+        alert("Failed to save the calculated experience. Please try again.");
     });
 }
 

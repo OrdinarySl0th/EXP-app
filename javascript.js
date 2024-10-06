@@ -373,20 +373,25 @@ function checkLevelUp(previousExp, currentExp) {
     const previousLevel = Math.floor(previousExp / maxExp);
     const currentLevel = Math.floor(currentExp / maxExp);
     if (currentLevel > previousLevel) {
-        const modal = document.getElementById('levelUpModal');
-        const newLevelSpan = document.getElementById('newLevel');
-        newLevelSpan.textContent = currentLevel;
-        modal.style.display = 'block';
+        showLevelUpModal(currentLevel);
+    }
+}
+function showLevelUpModal(level) {
+    const modal = document.getElementById('levelUpModal');
+    const newLevelSpan = document.getElementById('newLevel');
+    newLevelSpan.textContent = level;
+    modal.style.display = 'block';
 
-        const closeButton = document.getElementById('closeModal');
-        closeButton.onclick = function() {
+    // Close the modal when the close button is clicked
+    const closeButton = document.getElementById('closeModal');
+    closeButton.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    // Close the modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target == modal) {
             modal.style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
         }
     }
 }

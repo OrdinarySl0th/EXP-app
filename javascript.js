@@ -133,7 +133,7 @@ function login() {
         alert("Please enter both username and password.");
         return;
     }
-    auth.signInWithEmailAndPassword(email, password)
+    auth.signInWithEmailAndPassword(username, password)
         .then((userCredential) => {
             console.log("Login successful for user:", userCredential.user.uid);
             showDashboard();

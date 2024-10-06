@@ -8,51 +8,49 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<link rel="stylesheet" href="style.css">
 <body>
-    <div id="loginForm">
-        <h2>Login</h2>
+    <div id="loginForm" class="form-container">
+        <h1>Login</h1>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <button id="loginButton">Login</button>
-        <button id="registerButton">Register</button>
+        <button id="loginButton" class="primary-button">Login</button>
+        <button id="registerButton" class="secondary-button">Register</button>
     </div>
 
-    <div id="registerForm" style="display: none;">
-        <h2>Register</h2>
+    <div id="registerForm" class="form-container" style="display: none;">
+        <h1>Register</h1>
         <input type="text" id="newUsername" placeholder="Username">
         <input type="password" id="newPassword" placeholder="Password">
-        <button id="registerSubmitButton">Register</button>
-        <button id="backToLoginButton">Back to Login</button>
+        <button id="registerSubmitButton" class="primary-button">Register</button>
+        <button id="backToLoginButton" class="secondary-button">Back to Login</button>
     </div>
 
-    <div id="mainContent" style="display: none;">
-        <h2>Add New Experience</h2>
-        <input type="text" id="newExpName" placeholder="Experience Name">
-        <input type="number" id="newExpValue" placeholder="Experience Value">
-        <button id="addExperienceButton">Add Experience</button>
+    <main id="mainContent" style="display: none;">
+        <h1>Welcome to LvlUp!</h1>
+        <section class="Add-experience">
+            <h2>Add New Activity</h2>
+            <input type="text" id="newExpName" placeholder="Experience Name">
+            <input type="number" id="newExpValue" placeholder="Experience Value">
+            <button id="addExperienceButton" class="primary-button">Add Activity</button>
+        </section>
 
-        <h2>Your Experiences</h2>
-        <div id="experienceContainer"></div>
+        <section class="experience-list">
+            <h2>Your Activities</h2>
+            <div id="experienceContainer" class="checkbox-container"></div>
+        </section>
 
         <div class="button-container">
-            <button id="calcExpButton">Get EXP!</button>
-            <button id="editButton">Edit Selected</button>
-            <button id="deleteButton">Delete Selected</button>
+            <button id="calcExpButton" class="left-button">Get EXP!</button>
+            <button id="editButton" class="middle-button">Edit Selected</button>
+            <button id="deleteButton" class="right-button">Delete Selected</button>
+            <button id="logoutButton" class="logout-button">Logout</button>
         </div>
-        <button id="logoutButton" style="display: none;">Logout</button>
         <p id="totalExpDisplay">Total Experience: 0</p>
         <progress id="progressBar" value="0" max="100"></progress>
-
-    <div id="levelUpModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h2>You Leveled Up!</h2>
-            <p>Congratulations! You've reached level <span id="newLevel"></span>!</p>
-            <p>Go treat yourself, you've earned it!</p>
-            <button id="closeModal">Close</button>
-        </div>
-    </div>
+    </main>
     <script src="javascript.js"></script>
 </body>
 </html>

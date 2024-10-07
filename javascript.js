@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('editButton').addEventListener('click', editSelectedExperience);
     document.getElementById('deleteButton').addEventListener('click', deleteSelectedExperiences);
     document.getElementById('logoutButton').addEventListener('click', logout);
+    document.getElementById('resetbarbutton').addEventListener('click', resetProgress);
     })
 
 let currentUser = null;
@@ -206,8 +207,6 @@ function showDashboard() {
     document.getElementById('mainContent').style.display = 'block';
     displayUserExperiences();
     updateTotalExpDisplay();
-    displayFriendsList();
-    displayFriendRequests();
 }
 
 function showRegister() {
@@ -394,4 +393,67 @@ function showLevelUpModal(level) {
             modal.style.display = 'none';
         }
     }
+}
+
+function resetProgress() {
+    if (confirm("Are you sure you want to reset your progress? This action cannot be undone.")) {
+        currentUser.totalAccumulatedExp = 0;
+        updateTotalExpDisplay();
+        saveUserData(currentUser)
+            .then(() => {
+                alert("Progress reset successfully!");
+            })
+            .catch((error) => {
+                console.error("Error resetting progress:", error);
+                alert("Failed to reset progress. Please try again.");
+            });
+    }
+}
+
+// ... (existing code) ...
+
+// Function to show the reset confirmation modal
+function showResetConfirmModal() {
+    const modal = document.getElementById('resetConfirmModal');
+    modal.style.display = 'block';
+
+    document.getElementById('confirmReset').onclick = function() {
+        modal.style.display = 'none';
+        performReset();
+    };
+
+    document.getElementById('cancelReset').onclick = function() {
+        modal.style.display = 'none';
+    };
+}
+
+// Function to perform the actual reset
+function performReset() {
+    currentUser.totalAccumulatedExp = 0;
+    updateTotalExpDisplay();
+    saveUserData(currentUser)
+        .then(() => {
+            showMessageModal('Success', 'Progress reset successfully!');
+        })
+        .catch((error) => {
+            console.error("Error resetting progress:", error);
+            showMessageModal('Error', 'Failed to reset progress. Please try again.');
+        });
+}
+
+// Function to show the message modal
+function showMessageModal(title, message) {
+    const modal = document.getElementById('messageModal');
+    document.getElementById('messageTitle').textContent = title;
+    document.getElementById('messageText').textContent = message;
+    modal.style.display = 'block';
+
+    document.getElementById('closeMessageModal').onclick = function() {
+        modal.style.display = 'none';
+    };
+}
+
+// Updated resetProgress function
+function resetProgress() {
+    showResetConfirmModal();
 }

@@ -17,8 +17,8 @@ let maxExp = 100;
 
 // Classes
 class ExperienceTracker {
-    constructor() {
-        this.experiences = [];
+    constructor(experiences = []) {
+        this.experiences = experiences;
     }
 
     addExperience(amount, category) {
@@ -42,8 +42,8 @@ class ExperienceTracker {
     }
 }
 
-// Firebase functions
 function saveUserData(user) {
+    console.log("Saving user data:", user);
     return db.collection('users').doc(user.uid).set({
         username: user.displayName,
         experiences: user.tracker.experiences,
@@ -53,18 +53,6 @@ function saveUserData(user) {
     });
 }
 
-function loadUserData(user) {
-    return db.collection('users').doc(user.uid).get().then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            user.tracker.experiences = data.experiences || [];
-            user.totalAccumulatedExp = data.totalAccumulatedExp || 0;
-            user.friends = data.friends || [];
-            user.friendRequests = data.friendRequests || [];
-        }
-        return user;
-    });
-}
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -84,36 +72,16 @@ let currentUser = null;
 
 auth.onAuthStateChanged(function(user) {
     if (user) {
-        if (!currentUser) {
-            currentUser = {
-                uid: user.uid,
-                displayName: user.displayName,
-                tracker: new ExperienceTracker(),
-                totalAccumulatedExp: 0,
-                friends: [],
-                friendRequests: []
-            };
-            loadUserData(currentUser).then(() => {
-                showDashboard();
-            });
-        } else if (currentUser.uid !== user.uid) {
-            // User has changed, reload data
-            currentUser = {
-                uid: user.uid,
-                displayName: user.displayName,
-                tracker: new ExperienceTracker(),
-                totalAccumulatedExp: 0,
-                friends: [],
-                friendRequests: []
-            };
-            loadUserData(currentUser).then(() => {
-                showDashboard();
-            });
-        } else {
-            // User is the same, just show dashboard
+        console.log("Auth state changed: User is signed in", user);
+        loadUserData(user).then((loadedUser) => {
+            currentUser = loadedUser;
             showDashboard();
-        }
+        }).catch((error) => {
+            console.error("Error loading user data:", error);
+            showMessageModal("Error", "Failed to load user data. Please try logging in again.");
+        });
     } else {
+        console.log("Auth state changed: User is signed out");
         currentUser = null;
         showLogin();
     }
@@ -142,6 +110,8 @@ function register() {
         });
 }
 
+// ... (previous code remains the same)
+
 function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
@@ -150,12 +120,21 @@ function login() {
     
     if (!username || !password) {
         console.error("Username or password is empty");
-        alert("Please enter both username and password.");
+        showMessageModal("Error", "Please enter both username and password.");
         return;
     }
+
     auth.signInWithEmailAndPassword(username, password)
         .then((userCredential) => {
             console.log("Login successful for user:", userCredential.user.uid);
+            return loadUserData(userCredential.user);
+        })
+        .then((loadedUser) => {
+            if (!loadedUser) {
+                throw new Error("Failed to load user data");
+            }
+            currentUser = loadedUser;
+            console.log("User data loaded:", currentUser);
             showDashboard();
         })
         .catch((error) => {
@@ -174,10 +153,53 @@ function login() {
                 default:
                     errorMessage += error.message;
             }
-            alert(errorMessage);
+            showMessageModal("Error", errorMessage);
         });
 }
 
+function loadUserData(user) {
+    console.log("Loading user data for:", user.uid);
+    return db.collection('users').doc(user.uid).get().then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            console.log("Firestore data:", data);
+            return {
+                uid: user.uid,
+                displayName: user.displayName || data.username,
+                tracker: new ExperienceTracker(data.experiences || []),
+                totalAccumulatedExp: data.totalAccumulatedExp || 0,
+                friends: data.friends || [],
+                friendRequests: data.friendRequests || []
+            };
+        } else {
+            console.log("No user document found, creating new user data");
+            return {
+                uid: user.uid,
+                displayName: user.displayName,
+                tracker: new ExperienceTracker(),
+                totalAccumulatedExp: 0,
+                friends: [],
+                friendRequests: []
+            };
+        }
+    });
+}
+
+function showDashboard() {
+    console.log("Showing dashboard for user:", currentUser);
+    if (!currentUser) {
+        console.error("No current user when trying to show dashboard");
+        showMessageModal("Error", "An error occurred while loading your data. Please try logging in again.");
+        return;
+    }
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    displayUserExperiences();
+    updateTotalExpDisplay();
+}
+
+// ... (rest of the code remains the same)
 function logout() {
     if (currentUser) {
         saveUserData(currentUser)
@@ -201,13 +223,7 @@ function logout() {
     }
 }
 
-function showDashboard() {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    displayUserExperiences();
-    updateTotalExpDisplay();
-}
+
 
 function showRegister() {
     document.getElementById('loginForm').style.display = 'none';
@@ -238,15 +254,18 @@ function addNewExperience() {
     }
 
     const newExp = currentUser.tracker.addExperience(expValue, expName);
-    console.log("New experience added:", newExp);
-
-    // Immediately display the new experience
-    const experienceContainer = document.getElementById('experienceContainer');
-    if (experienceContainer) {
-        const expElement = document.createElement('div');
-        expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${newExp.id}"> ${newExp.category}: ${newExp.amount}`;
-        experienceContainer.appendChild(expElement);
-    }
+    saveUserData(currentUser)
+        .then(() => {
+            console.log("User data saved successfully");
+            displayUserExperiences();
+            document.getElementById('newExpName').value = '';
+            document.getElementById('newExpValue').value = '';
+        })
+        .catch((error) => {
+            console.error("Error saving user data:", error);
+            showMessageModal("Error", "Failed to save the new experience. Please try again.");
+        });
+}
 
     saveUserData(currentUser)
         .then(() => {
@@ -258,6 +277,13 @@ function addNewExperience() {
             console.error("Error saving user data:", error);
             alert("Failed to save the new experience. Please try again.");
         });
+        if (updatedExp) {
+            saveUserData(currentUser).then(() => {
+                displayUserExperiences();
+            }).catch((error) => {
+                console.error("Error saving edited experience:", error);
+                showMessageModal("Error", "Failed to save the edited experience. Please try again.");
+            });
 }
 function displayUserExperiences() {
     console.log("Displaying user experiences");
@@ -317,6 +343,9 @@ function deleteSelectedExperiences() {
         });
         saveUserData(currentUser).then(() => {
             displayUserExperiences();
+        }).catch((error) => {
+            console.error("Error saving after deleting experiences:", error);
+            showMessageModal("Error", "Failed to delete the selected experiences. Please try again.");
         });
     }
 }
@@ -346,8 +375,8 @@ function calcExp() {
         updateTotalExpDisplay();
         checkboxes.forEach(cb => cb.checked = false);
     }).catch((error) => {
-        console.error("Error saving user data:", error);
-        alert("Failed to save the calculated experience. Please try again.");
+        console.error("Error saving calculated experience:", error);
+        showMessageModal("Error", "Failed to save the calculated experience. Please try again.");
     });
 }
 

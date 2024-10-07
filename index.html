@@ -19,6 +19,23 @@
         <button id="loginButton" class="primary-button">Login</button>
         <button id="registerButton" class="secondary-button">Register</button>
     </div>
+    
+    <div id="resetConfirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Reset</h2>
+            <p>Are you sure you want to reset your progress? This action cannot be undone.</p>
+            <button id="confirmReset">Yes, Reset</button>
+            <button id="cancelReset">Cancel</button>
+        </div>
+    </div>
+
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <h2 id="messageTitle"></h2>
+            <p id="messageText"></p>
+            <button id="closeMessageModal">Close</button>
+        </div>
+    </div>
 
     <div id="registerForm" class="form-container" style="display: none;">
         <h1>Register</h1>
@@ -35,6 +52,7 @@
             <input type="text" id="newExpName" placeholder="Activity Name">
             <input type="number" id="newExpValue" placeholder="Activity Value">
             <button id="addExperienceButton" class="primary-button">Add Activity</button>
+            <button id="resetbarbutton" class="primary-button">Reset Progress</button>
         </section>
 
         <section class="experience-list">

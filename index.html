@@ -14,6 +14,8 @@
 <body>
     <div id="loginForm" class="form-container">
         <h1>Login</h1>
+        <!-- directions for logging in--> 
+        <p class="instruction-text">Use your credentials to log in, otherwise register to make an account!</p> 
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
         <button id="loginButton" class="primary-button">Login</button>
@@ -39,6 +41,9 @@
 
     <div id="registerForm" class="form-container" style="display: none;">
         <h1>Register</h1>
+        <!-- directions for registering-->
+        <p class="instruction-text">Enter a valid email and custom password.</p> 
+            <input type="text" id="newExpName" placeholder="Experience Name">
         <input type="text" id="newUsername" placeholder="Username">
         <input type="password" id="newPassword" placeholder="Password">
         <button id="registerSubmitButton" class="primary-button">Register</button>
@@ -47,6 +52,14 @@
 
     <main id="mainContent" style="display: none;">
         <h1>Welcome to LvlUp!</h1>
+        <!-- directions for creating an account--> 
+        <p class="instruction-text">
+            An Activity should be something you can do everyday to work towards a goal.<br>
+            ex. My goal is to get into better shape. <br>
+            ex. An activity to help me achieve this goal is to walk every day. <br>
+            Name the activity Walk and assign an experience value to that activity.<br>
+            Once the activity has been made you can click the checkbox and then "Get EXP!" to see your progress!<br>
+        </p> 
         <section class="Add-experience">
             <h2>Add New Activity</h2>
             <input type="text" id="newExpName" placeholder="Activity Name">

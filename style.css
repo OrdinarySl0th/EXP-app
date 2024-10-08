@@ -203,5 +203,37 @@ button:active {
     color: white;
 }
 
+.friend-management {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+.friend-management h2, .friend-management h3 {
+    margin-bottom: 10px;
+}
+
+.send-request {
+    margin-bottom: 15px;
+}
+
+#friendEmail {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+#friendRequestsList, #friendsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#friendRequestsList li, #friendsList li {
+    margin-bottom: 5px;
+}
+
+#friendRequestsList button {
+    margin-left: 10px;
+}
 
 /* Add more enhanced styles for other elements as needed */

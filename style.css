@@ -8,15 +8,12 @@
 
 body {
     font-family: 'Roboto', Arial, sans-serif;
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 35px 15px;
     background: var(--gradient-bg);
     color: var(--secondary-color);
     line-height: 1.6;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
 }
 
 h1 {
@@ -25,6 +22,16 @@ h1 {
     margin-bottom: 30px;
     font-size: calc(2rem + 1vw);
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.activities-and-friends {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.section.experience-list {
+    flex: 1;
 }
 
 .checkbox-container {
@@ -135,44 +142,7 @@ button:active {
 }
 
 .modal-content {
-    background-color: #333;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 400px;
-    text-align: center;
-    border-radius: 5px;
-}
-
-#closeModal {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#closeModal:hover {
-    background-color: #45a049;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #333;
+    background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
     border: 1px solid #888;
@@ -191,12 +161,24 @@ button:active {
     font-size: 16px;
 }
 
-#confirmReset {
-    background-color:var(--secondary-color);
+#closeModal {
+    background-color: #4CAF50;
     color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
+#closeModal:hover {
+    background-color: #45a049;
+}
 
+#confirmReset {
+    background-color: var(--secondary-color);
+    color: white;
+}
 
 #cancelReset, #closeMessageModal {
     background-color: var(--secondary-color);
@@ -204,14 +186,18 @@ button:active {
 }
 
 .friend-management {
-    margin-top: 20px;
+    width: 300px;
     padding: 15px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
+    background-color: rgba(51, 51, 51, 0.8);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 121, 50, 0.3);
+    backdrop-filter: blur(5px);
+    align-self: flex-start;
 }
 
 .friend-management h2, .friend-management h3 {
     margin-bottom: 10px;
+    color: var(--secondary-color);
 }
 
 .send-request {
@@ -221,6 +207,9 @@ button:active {
 #friendEmail {
     padding: 5px;
     margin-right: 10px;
+    background-color: white;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
 }
 
 #friendRequestsList, #friendsList {
@@ -230,10 +219,26 @@ button:active {
 
 #friendRequestsList li, #friendsList li {
     margin-bottom: 5px;
+    color: var(--secondary-color);
 }
 
 #friendRequestsList button {
     margin-left: 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-/* Add more enhanced styles for other elements as needed */
+@media (max-width: 768px) {
+    .activities-and-friends {
+        flex-direction: column;
+    }
+
+    .friend-management {
+        width: 100%;
+        margin-top: 20px;
+    }
+}

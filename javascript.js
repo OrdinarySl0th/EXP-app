@@ -500,14 +500,19 @@ function sendFriendRequest() {
         return;
     }
 
+    console.log(`Attempting to send friend request to: ${friendEmail}`);
+
     db.collection('users').where('username', '==', friendEmail).get()
         .then((querySnapshot) => {
             if (querySnapshot.empty) {
+                console.log('User not found');
                 showMessageModal('Error', 'User not found.');
                 return;
             }
             const friendDoc = querySnapshot.docs[0];
             const friendId = friendDoc.id;
+            console.log(`Found user with ID: ${friendId}`);
+
             if (friendId === currentUser.uid) {
                 showMessageModal('Error', 'You cannot send a friend request to yourself.');
                 return;
@@ -527,6 +532,7 @@ function sendFriendRequest() {
             });
         })
         .then(() => {
+            console.log('Friend request sent successfully');
             showMessageModal('Success', 'Friend request sent successfully.');
             document.getElementById('friendEmail').value = '';
         })
@@ -534,29 +540,6 @@ function sendFriendRequest() {
             console.error('Error sending friend request:', error);
             showMessageModal('Error', 'Failed to send friend request. Please try again.');
         });
-}
-
-function displayFriendRequests() {
-    const requestsList = document.getElementById('friendRequestsList');
-    requestsList.innerHTML = '';
-    currentUser.friendRequests.forEach(requestId => {
-        db.collection('users').doc(requestId).get()
-            .then((doc) => {
-                if (doc.exists) {
-                    const requestData = doc.data();
-                    const listItem = document.createElement('li');
-                    listItem.textContent = requestData.username;
-                    const acceptButton = document.createElement('button');
-                    acceptButton.textContent = 'Accept';
-                    acceptButton.onclick = () => acceptFriendRequest(requestId);
-                    listItem.appendChild(acceptButton);
-                    requestsList.appendChild(listItem);
-                }
-            })
-            .catch((error) => {
-                console.error('Error getting friend request data:', error);
-            });
-    });
 }
 
 function acceptFriendRequest(friendId) {
@@ -567,7 +550,7 @@ function acceptFriendRequest(friendId) {
 
     // Update current user's document
     db.collection('users').doc(currentUser.uid).update({
-        friends: currentUser.friends,
+        friends: firebase.firestore.FieldValue.arrayUnion(friendId),
         friendRequests: currentUser.friendRequests
     })
     .then(() => {
@@ -578,8 +561,7 @@ function acceptFriendRequest(friendId) {
     })
     .then(() => {
         showMessageModal('Success', 'Friend request accepted.');
-        displayFriendRequests();
-        displayFriendsList();
+        refreshFriendData();
     })
     .catch((error) => {
         console.error('Error accepting friend request:', error);

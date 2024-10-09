@@ -80,7 +80,15 @@ auth.onAuthStateChanged(function(user) {
             showDashboard();
         }).catch((error) => {
             console.error("Error loading user data:", error);
-            showMessageModal("Error", "Failed to load user data. Please try logging in again.");
+            currentUser = {
+                uid: user.uid,
+                displayName: user.displayName,
+                tracker: new ExperienceTracker(),
+                totalAccumulatedExp: 0,
+                friends: [],
+                friendRequests: []
+            };
+            showDashboard();
         });
     } else {
         console.log("Auth state changed: User is signed out");
@@ -161,46 +169,67 @@ function login() {
 
 function loadUserData(user) {
     console.log("Loading user data for:", user.uid);
-    return db.collection('users').doc(user.uid).get().then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            console.log("Firestore data:", data);
-            return {
-                uid: user.uid,
-                displayName: user.displayName || data.username,
-                tracker: new ExperienceTracker(data.experiences || []),
-                totalAccumulatedExp: data.totalAccumulatedExp || 0,
-                friends: data.friends || [],
-                friendRequests: data.friendRequests || []
-            };
-        } else {
-            console.log("No user document found, creating new user data");
-            return {
-                uid: user.uid,
-                displayName: user.displayName,
-                tracker: new ExperienceTracker(),
-                totalAccumulatedExp: 0,
-                friends: [],
-                friendRequests: []
-            };
-        }
-    });
+    return db.collection('users').doc(user.uid).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                console.log("Firestore data loaded:", data);
+                return {
+                    uid: user.uid,
+                    displayName: user.displayName || data.username,
+                    tracker: new ExperienceTracker(data.experiences || []),
+                    totalAccumulatedExp: data.totalAccumulatedExp || 0,
+                    friends: data.friends || [],
+                    friendRequests: data.friendRequests || []
+                };
+            } else {
+                console.log("No user document found, creating new user data");
+                const newUserData = {
+                    uid: user.uid,
+                    displayName: user.displayName,
+                    tracker: new ExperienceTracker(),
+                    totalAccumulatedExp: 0,
+                    friends: [],
+                    friendRequests: []
+                };
+                // Create a new document for the user
+                return db.collection('users').doc(user.uid).set(newUserData)
+                    .then(() => newUserData);
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading user data:", error);
+            throw error; // Rethrow the error to be caught in the calling function
+        });
 }
 
 function showDashboard() {
-    console.log("Showing dashboard for user:", currentUser);
+    console.log("Attempting to show dashboard for user:", currentUser);
     if (!currentUser) {
         console.error("No current user when trying to show dashboard");
         showMessageModal("Error", "An error occurred while loading your data. Please try logging in again.");
         return;
     }
+
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
-    displayUserExperiences();
-    updateTotalExpDisplay();
-    displayFriendRequests();
-    displayFriendsList();
+
+    // Attempt to display user data
+    try {
+        displayUserExperiences();
+        updateTotalExpDisplay();
+        refreshFriendData().then(() => {
+            console.log('Dashboard loaded and friend data refreshed');
+            setupFriendRequestListener();
+        }).catch(error => {
+            console.error('Error refreshing friend data:', error);
+            showMessageModal("Warning", "Some user data couldn't be loaded. You may need to refresh the page.");
+        });
+    } catch (error) {
+        console.error('Error displaying user data:', error);
+        showMessageModal("Warning", "There was an issue displaying your data. Some features may not work correctly.");
+    }
 }
 
 // ... (rest of the code remains the same)
@@ -500,19 +529,14 @@ function sendFriendRequest() {
         return;
     }
 
-    console.log(`Attempting to send friend request to: ${friendEmail}`);
-
     db.collection('users').where('username', '==', friendEmail).get()
         .then((querySnapshot) => {
             if (querySnapshot.empty) {
-                console.log('User not found');
                 showMessageModal('Error', 'User not found.');
                 return;
             }
             const friendDoc = querySnapshot.docs[0];
             const friendId = friendDoc.id;
-            console.log(`Found user with ID: ${friendId}`);
-
             if (friendId === currentUser.uid) {
                 showMessageModal('Error', 'You cannot send a friend request to yourself.');
                 return;
@@ -532,9 +556,9 @@ function sendFriendRequest() {
             });
         })
         .then(() => {
-            console.log('Friend request sent successfully');
             showMessageModal('Success', 'Friend request sent successfully.');
             document.getElementById('friendEmail').value = '';
+            console.log('Friend request sent to:', friendEmail);
         })
         .catch((error) => {
             console.error('Error sending friend request:', error);
@@ -569,21 +593,57 @@ function acceptFriendRequest(friendId) {
     });
 }
 
-function displayFriendsList() {
-    const friendsList = document.getElementById('friendsList');
-    friendsList.innerHTML = '';
-    currentUser.friends.forEach(friendId => {
-        db.collection('users').doc(friendId).get()
+function displayFriendRequests() {
+    console.log('Displaying friend requests for user:', currentUser.uid);
+    console.log('Current friend requests:', currentUser.friendRequests);
+    
+    const requestsList = document.getElementById('friendRequestsList');
+    requestsList.innerHTML = '';
+    
+    if (currentUser.friendRequests.length === 0) {
+        requestsList.innerHTML = '<li>No pending friend requests.</li>';
+        return;
+    }
+    
+    currentUser.friendRequests.forEach(requestId => {
+        db.collection('users').doc(requestId).get()
             .then((doc) => {
                 if (doc.exists) {
-                    const friendData = doc.data();
+                    const requestData = doc.data();
+                    console.log('Friend request from:', requestData.username);
                     const listItem = document.createElement('li');
-                    listItem.textContent = friendData.username;
-                    friendsList.appendChild(listItem);
+                    listItem.textContent = requestData.username;
+                    const acceptButton = document.createElement('button');
+                    acceptButton.textContent = 'Accept';
+                    acceptButton.onclick = () => acceptFriendRequest(requestId);
+                    listItem.appendChild(acceptButton);
+                    requestsList.appendChild(listItem);
+                } else {
+                    console.log('No user found for request ID:', requestId);
                 }
             })
             .catch((error) => {
-                console.error('Error getting friend data:', error);
+                console.error('Error getting friend request data:', error);
             });
+    });
+}
+function setupFriendRequestListener() {
+    if (!currentUser) {
+        console.error('Cannot set up listener: No current user');
+        return;
+    }
+
+    const userDoc = db.collection('users').doc(currentUser.uid);
+    userDoc.onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.friendRequests) {
+                console.log('Friend requests updated:', data.friendRequests);
+                currentUser.friendRequests = data.friendRequests;
+                displayFriendRequests();
+            }
+        }
+    }, (error) => {
+        console.error('Error in friend request listener:', error);
     });
 }

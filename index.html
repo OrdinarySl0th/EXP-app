@@ -14,7 +14,6 @@
 <body>
     <div id="loginForm" class="form-container">
         <h1>Login</h1>
-        <!-- directions for logging in--> 
         <p class="instruction-text">Use your credentials to log in, otherwise register to make an account!</p> 
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
@@ -41,7 +40,6 @@
 
     <div id="registerForm" class="form-container" style="display: none;">
         <h1>Register</h1>
-        <!-- directions for registering-->
         <p class="instruction-text">Enter a valid email and custom password.</p> 
         <input type="text" id="newUsername" placeholder="Username">
         <input type="password" id="newPassword" placeholder="Password">
@@ -51,7 +49,6 @@
 
     <main id="mainContent" style="display: none;">
         <h1>Welcome to LvlUp!</h1>
-        <!-- directions for creating an account--> 
         <p class="instruction-text">
             An Activity should be something you can do everyday to work towards a goal.<br>
             ex. My goal is to get into better shape. <br>
@@ -59,21 +56,7 @@
             Name the activity Walk and assign an experience value to that activity.<br>
             Once the activity has been made you can click the checkbox and then "Get EXP!" to see your progress!<br>
         </p> 
-        <section class="friend-management">
-            <h2>Friend Management</h2>
-            <div class="send-request">
-                <input type="text" id="friendEmail" placeholder="Friend's Email">
-                <button id="sendFriendRequest">Send Friend Request</button>
-            </div>
-            <div class="friend-requests">
-                <h3>Friend Requests</h3>
-                <ul id="friendRequestsList"></ul>
-            </div>
-            <div class="friends-list">
-                <h3>Friends List</h3>
-                <ul id="friendsList"></ul>
-            </div>
-        </section>
+        
         <section class="Add-experience">
             <h2>Add New Activity</h2>
             <input type="text" id="newExpName" placeholder="Activity Name">
@@ -82,10 +65,32 @@
             <button id="resetbarbutton" class="primary-button">Reset Progress</button>
         </section>
 
-        <section class="experience-list">
-            <h2>Your Activities</h2>
-            <div id="experienceContainer" class="checkbox-container"></div>
-        </section>
+        <div class="activities-and-friends">
+            <section class="experience-list">
+                <h2>Your Activities</h2>
+                <div id="experienceContainer" class="checkbox-container"></div>
+            </section>
+
+            <div class="friend-management">
+                <h2>Friend Management</h2>
+                <div class="send-request">
+                    <input type="email" id="friendEmail" placeholder="Friend's email">
+                    <button>Send Friend Request</button>
+                </div>
+                <div class="friend-requests">
+                    <h3>Friend Requests</h3>
+                    <ul id="friendRequestsList">
+                    <!-- Friend requests will be dynamically added here -->
+                    </ul>
+                </div>
+                <div class="friends-list">
+                    <h3>Friends List</h3>
+                    <ul id="friendsList">
+                    <!-- Friends will be dynamically added here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
 
         <div class="button-container">
             <button id="calcExpButton" class="left-button">Get EXP!</button>
@@ -96,6 +101,7 @@
         <p id="totalExpDisplay">Total Experience: 0</p>
         <progress id="progressBar" value="0" max="100"></progress>
     </main>
+
     <div id="levelUpModal" class="modal">
         <div class="modal-content">
             <h2>Level Up!</h2>
@@ -103,6 +109,7 @@
             <button id="closeModal">Close</button>
         </div>
     </div>
+
     <script src="javascript.js"></script>
 </body>
 </html>

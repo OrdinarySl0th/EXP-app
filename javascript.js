@@ -74,11 +74,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('deleteButton').addEventListener('click', deleteSelectedExperiences);
     document.getElementById('logoutButton').addEventListener('click', logout);
     document.getElementById('resetbarbutton').addEventListener('click', resetProgress);
-    const sendFriendRequestButton = document.getElementById('sendFriendRequest');
-    if (sendFriendRequestButton) {
-        sendFriendRequestButton.addEventListener('click', sendFriendRequest);
-    } else {
-        console.warn("Send friend request button not found in the DOM");
+    document.getElementById('sendFriendRequest').addEventListener('click', sendFriendRequest);
+
+    // Making sure the Exp input values are between 0 - 5
+    const newExpValueInput = document.getElementById('newExpValue');
+    if (newExpValueInput) {
+        newExpValueInput.addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (isNaN(value)) {
+                this.setCustomValidity('Please enter a number between 0 and 5');
+            } else if (value < 0) {
+                this.setCustomValidity('The minimum experience value is 0');
+            } else if (value > 5) {
+                this.setCustomValidity('The maximum experience value is 5');
+            } else if (value.toFixed(2) !== this.value && this.value.includes('.')) {} 
+            else {
+                this.setCustomValidity('');
+            }
+        });
     }
 });
 
@@ -257,25 +270,36 @@ function addNewExperience() {
         showMessageModal("Error", "Please log in to add an experience.");
         return;
     }
+    console.log("Current user:", currentUser);
+
     const expName = document.getElementById('newExpName').value.trim();
-    const expValue = parseFloat(document.getElementById('newExpValue').value);
+    let expValue = parseFloat(document.getElementById('newExpValue').value);
     console.log("Input values:", expName, expValue);
 
-    if (!expName || isNaN(expValue)) {
-        showMessageModal("Error", "Please enter a valid experience name and value.");
+    if (!expName) {
+        showMessageModal("Error", "Please enter a valid experience name.");
         return;
     }
 
+    // Enforce min and max values
+    if (isNaN(expValue) || expValue < 0) {
+        expValue = 0;
+    } else if (expValue > 5) {
+        expValue = 5;
+    }
+    console.log("Adding new experience to tracker");
     const newExp = currentUser.tracker.addExperience(expValue, expName);
-    maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
+    console.log("New experience added:", newExp);
 
+    console.log("Attempting to save user data");
     saveUserData(currentUser)
         .then(() => {
             console.log("User data saved successfully");
             displayUserExperiences();
-            updateTotalExpDisplay(); // This will use the new maxExp
+            updateTotalExpDisplay();
             document.getElementById('newExpName').value = '';
             document.getElementById('newExpValue').value = '';
+            showMessageModal("Success", `Added new experience: ${expName} with value ${expValue}`);
         })
         .catch((error) => {
             console.error("Error saving user data:", error);
@@ -321,10 +345,9 @@ function editSelectedExperience() {
     if (newCategory !== null && newAmount !== null) {
         const updatedExp = currentUser.tracker.editExperience(expId, parseFloat(newAmount), newCategory);
         if (updatedExp) {
-            maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
             saveUserData(currentUser).then(() => {
                 displayUserExperiences();
-                updateTotalExpDisplay(); // This will use the new maxExp
+                updateTotalExpDisplay();
             }).catch((error) => {
                 console.error("Error saving edited experience:", error);
                 showMessageModal("Error", "Failed to save the edited experience. Please try again.");
@@ -344,15 +367,32 @@ function deleteSelectedExperiences() {
             currentUser.tracker.deleteExperience(expId);
         })});
         saveUserData(currentUser).then(() => {
-            maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
             displayUserExperiences();
-            updateTotalExpDisplay(); // This will use the new maxExp
+            updateTotalExpDisplay();
         }).catch((error) => {
             console.error("Error saving after deleting experiences:", error);
             showMessageModal("Error", "Failed to delete the selected experiences. Please try again.");
         });
-    }
+}
 
+function calculateLevel(totalExp, experiences) {
+    let level = 0;
+    let expThreshold = calculateThreshold(experiences, level);
+        
+    while (totalExp >= expThreshold) {
+        totalExp -= expThreshold;
+        level++;
+        expThreshold = calculateThreshold(experiences, level);
+    }
+        
+    return level;
+}
+
+function calculateThreshold(experiences, currentLevel) {
+    const totalCheckboxes = experiences.length;
+    const sumOfExperiences = experiences.reduce((sum, exp) => sum + exp.amount, 0);
+    return totalCheckboxes * sumOfExperiences * (currentLevel + 1);
+}
 
 function calcExp() {
     if (!currentUser) {
@@ -372,14 +412,14 @@ function calcExp() {
     });
     const totalChecked = checkboxes.length;
     const finalExp = totalExp * totalChecked;
-    const previousExp = currentUser.totalAccumulatedExp;
+    const previousLevel = calculateLevel(currentUser.totalAccumulatedExp, currentUser.tracker.experiences);
     currentUser.totalAccumulatedExp += finalExp;
 
-    // Recalculate maxExp before checking for level up
-    maxExp = calculateMaxExp(currentUser);
-
     saveUserData(currentUser).then(() => {
-        checkLevelUp(previousExp, currentUser.totalAccumulatedExp);
+        const newLevel = calculateLevel(currentUser.totalAccumulatedExp, currentUser.tracker.experiences);
+        if (newLevel > previousLevel) {
+            showLevelUpModal(newLevel);
+        }
         updateTotalExpDisplay();
         checkboxes.forEach(cb => cb.checked = false);
     }).catch((error) => {
@@ -391,15 +431,13 @@ function calcExp() {
 function calculateMaxExp(user) {
     if (!user || !user.tracker || !user.tracker.experiences) {
         console.error("Invalid user object for maxExp calculation");
-        return 300; // Default value if user data is invalid
+        return 100; // Default value if user data is invalid
     }
 
-    const totalCheckboxes = user.tracker.experiences.length;
-    const sumOfExperiences = user.tracker.experiences.reduce((sum, exp) => sum + exp.amount, 0);
-    const currentLevel = Math.floor(user.totalAccumulatedExp / maxExp);
-    
-    return totalCheckboxes * sumOfExperiences * (currentLevel + 1);
-} 
+    const currentLevel = calculateLevel(user.totalAccumulatedExp, user.tracker.experiences);
+    return calculateThreshold(user.tracker.experiences, currentLevel);
+}
+
 
 function updateTotalExpDisplay() {
     if (!currentUser) {
@@ -407,30 +445,20 @@ function updateTotalExpDisplay() {
         return;
     }
 
-    maxExp = calculateMaxExp(currentUser);
-
-    const currentLevel = Math.floor(currentUser.totalAccumulatedExp / maxExp);
-    const remainingExp = currentUser.totalAccumulatedExp % maxExp;
+    const maxExp = calculateMaxExp(currentUser);
+    const currentLevel = calculateLevel(currentUser.totalAccumulatedExp, currentUser.tracker.experiences);
+    const expForNextLevel = calculateThreshold(currentUser.tracker.experiences, currentLevel);
+    const remainingExp = currentUser.totalAccumulatedExp - calculateThreshold(currentUser.tracker.experiences, currentLevel - 1);
 
     const progressBar = document.getElementById('progressBar');
     if (progressBar) {
-        progressBar.max = maxExp;
+        progressBar.max = expForNextLevel;
         progressBar.value = remainingExp;
     }
 
-    document.getElementById('totalExpDisplay').textContent = `Total Experience: ${currentUser.totalAccumulatedExp} (Level ${currentLevel}, ${remainingExp}/${maxExp})`;
+    document.getElementById('totalExpDisplay').textContent = `Total Experience: ${currentUser.totalAccumulatedExp} (Level ${currentLevel}, ${remainingExp}/${expForNextLevel})`;
 }
 
-function checkLevelUp(previousExp, currentExp) {
-    const previousLevel = Math.floor(previousExp / maxExp);
-    const currentLevel = Math.floor(currentExp / maxExp);
-    if (currentLevel > previousLevel) {
-        showLevelUpModal(currentLevel);
-        // Recalculate maxExp after leveling up
-        maxExp = calculateMaxExp(currentUser);
-        updateTotalExpDisplay();
-    }
-}
 function showLevelUpModal(level) {
     const modal = document.getElementById('levelUpModal');
     const newLevelSpan = document.getElementById('newLevel');

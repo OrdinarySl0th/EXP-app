@@ -209,7 +209,7 @@ button:active {
     margin-right: 10px;
     background-color: white;
     border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
+    color: var(--text-color);
 }
 
 #friendRequestsList, #friendsList {
@@ -232,7 +232,7 @@ button:active {
     cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .activities-and-friends {
         flex-direction: column;
     }

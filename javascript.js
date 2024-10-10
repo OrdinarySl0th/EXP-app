@@ -43,6 +43,10 @@ class ExperienceTracker {
 }
 
 function saveUserData(user) {
+    if (!user || !user.uid) {
+        console.error("Invalid user object passed to saveUserData");
+        return Promise.reject(new Error("Invalid user object"));
+    }
     console.log("Saving user data:", user);
     return db.collection('users').doc(user.uid).set({
         username: user.displayName,
@@ -94,7 +98,7 @@ function register() {
     const username = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newPassword').value;
     if (!username || !password) {
-        alert("Username and password cannot be empty!");
+        showMessageModal("Error", "Username and password cannot be empty!");
         return;
     }
     auth.createUserWithEmailAndPassword(username, password)
@@ -104,11 +108,11 @@ function register() {
             });
         })
         .then(() => {
-            alert("Registration successful! Please log in.");
+            showMessageModal("Success", "Registration successful! Please log in.");
             showLogin();
         })
         .catch((error) => {
-            alert("Registration failed: " + error.message);
+            showMessageModal("Error", "Registration failed: " + error.message);
         });
 }
 
@@ -199,11 +203,9 @@ function showDashboard() {
     document.getElementById('mainContent').style.display = 'block';
     displayUserExperiences();
     updateTotalExpDisplay();
-    displayFriendRequests();
     displayFriendsList();
 }
 
-// ... (rest of the code remains the same)
 function logout() {
     if (currentUser) {
         saveUserData(currentUser)
@@ -218,7 +220,7 @@ function logout() {
             })
             .catch((error) => {
                 console.error('Logout error', error);
-                alert('An error occurred during logout. Please try again.');
+                showMessageModal("Error", 'An error occurred during logout. Please try again.');
             });
     } else {
         console.log('No user is currently logged in');
@@ -226,8 +228,6 @@ function logout() {
         document.getElementById('loginForm').style.display = 'block';
     }
 }
-
-
 
 function showRegister() {
     document.getElementById('loginForm').style.display = 'none';
@@ -242,12 +242,11 @@ function showLogin() {
 // Add Experience functions
 function addNewExperience() {
     console.log("addNewExperience function called");
-    if (!currentUser) {
+    if (!currentUser || !currentUser.uid) {
         console.error("No user is currently logged in");
-        alert("Please log in to add an experience.");
+        showMessageModal("Error", "Please log in to add an experience.");
         return;
     }
-
     const expName = document.getElementById('newExpName').value.trim();
     const expValue = parseFloat(document.getElementById('newExpValue').value);
     console.log("Input values:", expName, expValue);
@@ -317,7 +316,7 @@ function displayUserExperiences() {
 function editSelectedExperience() {
     const selectedCheckboxes = document.querySelectorAll('.experience-checkbox:checked');
     if (selectedCheckboxes.length !== 1) {
-        alert('Please select exactly one experience to edit.');
+        showMessageModal("Error", 'Please select exactly one experience to edit.');
         return;
     }
     const expId = selectedCheckboxes[0].getAttribute('data-id');
@@ -337,10 +336,10 @@ function editSelectedExperience() {
 function deleteSelectedExperiences() {
     const selectedCheckboxes = document.querySelectorAll('.experience-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
-        alert('Please select at least one experience to delete.');
+        showMessageModal("Error", 'Please select at least one experience to delete.');
         return;
     }
-    if (confirm('Are you sure you want to delete the selected experience(s)?')) {
+    showConfirmModal('Are you sure you want to delete the selected experience(s)?', () => {
         selectedCheckboxes.forEach(checkbox => {
             const expId = checkbox.getAttribute('data-id');
             currentUser.tracker.deleteExperience(expId);
@@ -351,13 +350,13 @@ function deleteSelectedExperiences() {
             console.error("Error saving after deleting experiences:", error);
             showMessageModal("Error", "Failed to delete the selected experiences. Please try again.");
         });
-    }
+    });
 }
 
 function calcExp() {
     if (!currentUser) {
         console.error("No user is currently logged in");
-        alert("Please log in to calculate experience.");
+        showMessageModal("Error", "Please log in to calculate experience.");
         return;
     }
 
@@ -487,10 +486,19 @@ function showMessageModal(title, message) {
 
 // Updated resetProgress function
 function resetProgress() {
-    showResetConfirmModal();
+    showConfirmModal("Are you sure you want to reset your progress? This action cannot be undone.", () => {
+        currentUser.totalAccumulatedExp = 0;
+        updateTotalExpDisplay();
+        saveUserData(currentUser)
+            .then(() => {
+                showMessageModal("Success", "Progress reset successfully!");
+            })
+            .catch((error) => {
+                console.error("Error resetting progress:", error);
+                showMessageModal("Error", "Failed to reset progress. Please try again.");
+            });
+    });
 }
-
-// ... (existing Firebase initialization and global variables) ...
 
 // Add these new functions for friend management
 function sendFriendRequest() {
@@ -586,4 +594,50 @@ function displayFriendsList() {
                 console.error('Error getting friend data:', error);
             });
     });
+}
+
+function showMessageModal(title, message) {
+    const modal = document.getElementById('messageModal');
+    const titleElement = document.getElementById('messageTitle');
+    const textElement = document.getElementById('messageText');
+    const closeButton = document.getElementById('closeMessageModal');
+
+    titleElement.textContent = title;
+    textElement.textContent = message;
+    modal.style.display = 'block';
+
+    closeButton.onclick = function() {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+function showConfirmModal(message, onConfirm) {
+    const modal = document.getElementById('confirmModal');
+    const messageElement = document.getElementById('confirmMessage');
+    const confirmButton = document.getElementById('confirmAction');
+    const cancelButton = document.getElementById('cancelAction');
+
+    messageElement.textContent = message;
+    modal.style.display = 'block';
+
+    confirmButton.onclick = function() {
+        modal.style.display = 'none';
+        onConfirm();
+    };
+
+    cancelButton.onclick = function() {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
 }

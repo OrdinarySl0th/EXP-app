@@ -12,8 +12,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Global variables
-let maxExp = 100;
+console.log("Application starting...");
 
 // Classes
 class ExperienceTracker {
@@ -54,6 +53,10 @@ function saveUserData(user) {
         totalAccumulatedExp: user.totalAccumulatedExp,
         friends: user.friends,
         friendRequests: user.friendRequests
+    }, { merge: true })  // Use merge: true to update fields without overwriting the entire document
+    .catch(error => {
+        console.error("Firestore save error:", error);
+        throw error;  // Re-throw the error to be caught by the calling function
     });
 }
 
@@ -71,15 +74,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('deleteButton').addEventListener('click', deleteSelectedExperiences);
     document.getElementById('logoutButton').addEventListener('click', logout);
     document.getElementById('resetbarbutton').addEventListener('click', resetProgress);
-    document.getElementById('sendFriendRequest').addEventListener('click', sendFriendRequest);
-    })
+    const sendFriendRequestButton = document.getElementById('sendFriendRequest');
+    if (sendFriendRequestButton) {
+        sendFriendRequestButton.addEventListener('click', sendFriendRequest);
+    } else {
+        console.warn("Send friend request button not found in the DOM");
+    }
+});
 
 let currentUser = null;
 
-auth.onAuthStateChanged(function(user) {
+firebase.auth().onAuthStateChanged(function(user) {
+    console.log("Auth state changed. User:", user ? user.uid : "No user");
     if (user) {
-        console.log("Auth state changed: User is signed in", user);
+        console.log("User is signed in, loading user data...");
         loadUserData(user).then((loadedUser) => {
+            console.log("User data loaded:", loadedUser);
             currentUser = loadedUser;
             showDashboard();
         }).catch((error) => {
@@ -87,7 +97,7 @@ auth.onAuthStateChanged(function(user) {
             showMessageModal("Error", "Failed to load user data. Please try logging in again.");
         });
     } else {
-        console.log("Auth state changed: User is signed out");
+        console.log("No user signed in, showing login form");
         currentUser = null;
         showLogin();
     }
@@ -252,42 +262,27 @@ function addNewExperience() {
     console.log("Input values:", expName, expValue);
 
     if (!expName || isNaN(expValue)) {
-        alert("Please enter a valid experience name and value.");
+        showMessageModal("Error", "Please enter a valid experience name and value.");
         return;
     }
 
     const newExp = currentUser.tracker.addExperience(expValue, expName);
-    saveUserData(currentUser)
-        .then(() => {
-            console.log("User data saved successfully");
-            displayUserExperiences();
-            document.getElementById('newExpName').value = '';
-            document.getElementById('newExpValue').value = '';
-        })
-        .catch((error) => {
-            console.error("Error saving user data:", error);
-            showMessageModal("Error", "Failed to save the new experience. Please try again.");
-        });
-}
+    maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
 
     saveUserData(currentUser)
         .then(() => {
             console.log("User data saved successfully");
+            displayUserExperiences();
+            updateTotalExpDisplay(); // This will use the new maxExp
             document.getElementById('newExpName').value = '';
             document.getElementById('newExpValue').value = '';
         })
         .catch((error) => {
             console.error("Error saving user data:", error);
-            alert("Failed to save the new experience. Please try again.");
+            showMessageModal("Error", `Failed to save the new experience: ${error.message}`);
         });
-        if (updatedExp) {
-            saveUserData(currentUser).then(() => {
-                displayUserExperiences();
-            }).catch((error) => {
-                console.error("Error saving edited experience:", error);
-                showMessageModal("Error", "Failed to save the edited experience. Please try again.");
-            });
 }
+
 function displayUserExperiences() {
     console.log("Displaying user experiences");
     const experienceContainer = document.getElementById('experienceContainer');
@@ -326,13 +321,17 @@ function editSelectedExperience() {
     if (newCategory !== null && newAmount !== null) {
         const updatedExp = currentUser.tracker.editExperience(expId, parseFloat(newAmount), newCategory);
         if (updatedExp) {
+            maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
             saveUserData(currentUser).then(() => {
                 displayUserExperiences();
+                updateTotalExpDisplay(); // This will use the new maxExp
+            }).catch((error) => {
+                console.error("Error saving edited experience:", error);
+                showMessageModal("Error", "Failed to save the edited experience. Please try again.");
             });
         }
     }
 }
-
 function deleteSelectedExperiences() {
     const selectedCheckboxes = document.querySelectorAll('.experience-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
@@ -343,15 +342,17 @@ function deleteSelectedExperiences() {
         selectedCheckboxes.forEach(checkbox => {
             const expId = checkbox.getAttribute('data-id');
             currentUser.tracker.deleteExperience(expId);
-        });
+        })});
         saveUserData(currentUser).then(() => {
+            maxExp = calculateMaxExp(currentUser); // Recalculate maxExp
             displayUserExperiences();
+            updateTotalExpDisplay(); // This will use the new maxExp
         }).catch((error) => {
             console.error("Error saving after deleting experiences:", error);
             showMessageModal("Error", "Failed to delete the selected experiences. Please try again.");
         });
-    });
-}
+    }
+
 
 function calcExp() {
     if (!currentUser) {
@@ -373,6 +374,10 @@ function calcExp() {
     const finalExp = totalExp * totalChecked;
     const previousExp = currentUser.totalAccumulatedExp;
     currentUser.totalAccumulatedExp += finalExp;
+
+    // Recalculate maxExp before checking for level up
+    maxExp = calculateMaxExp(currentUser);
+
     saveUserData(currentUser).then(() => {
         checkLevelUp(previousExp, currentUser.totalAccumulatedExp);
         updateTotalExpDisplay();
@@ -383,18 +388,34 @@ function calcExp() {
     });
 }
 
-function updateTotalExpDisplay() {
-    if (maxExp <= 0) {
-        console.warn('maxExp is not properly set. Setting it to a default value of 100.');
-        maxExp = 100;
+function calculateMaxExp(user) {
+    if (!user || !user.tracker || !user.tracker.experiences) {
+        console.error("Invalid user object for maxExp calculation");
+        return 300; // Default value if user data is invalid
     }
+
+    const totalCheckboxes = user.tracker.experiences.length;
+    const sumOfExperiences = user.tracker.experiences.reduce((sum, exp) => sum + exp.amount, 0);
+    const currentLevel = Math.floor(user.totalAccumulatedExp / maxExp);
+    
+    return totalCheckboxes * sumOfExperiences * (currentLevel + 1);
+} 
+
+function updateTotalExpDisplay() {
+    if (!currentUser) {
+        console.warn('No current user when updating exp display');
+        return;
+    }
+
+    maxExp = calculateMaxExp(currentUser);
 
     const currentLevel = Math.floor(currentUser.totalAccumulatedExp / maxExp);
     const remainingExp = currentUser.totalAccumulatedExp % maxExp;
 
     const progressBar = document.getElementById('progressBar');
     if (progressBar) {
-        progressBar.value = Math.min(Math.max(remainingExp, 0), maxExp);
+        progressBar.max = maxExp;
+        progressBar.value = remainingExp;
     }
 
     document.getElementById('totalExpDisplay').textContent = `Total Experience: ${currentUser.totalAccumulatedExp} (Level ${currentLevel}, ${remainingExp}/${maxExp})`;
@@ -405,6 +426,9 @@ function checkLevelUp(previousExp, currentExp) {
     const currentLevel = Math.floor(currentExp / maxExp);
     if (currentLevel > previousLevel) {
         showLevelUpModal(currentLevel);
+        // Recalculate maxExp after leveling up
+        maxExp = calculateMaxExp(currentUser);
+        updateTotalExpDisplay();
     }
 }
 function showLevelUpModal(level) {
@@ -502,7 +526,7 @@ function resetProgress() {
 
 // Add these new functions for friend management
 function sendFriendRequest() {
-    const friendEmail = document.getElementById('friendEmail').value.trim();
+    const friendEmail = document.getElementById('friendEmail')?.value.trim();
     if (!friendEmail) {
         showMessageModal('Error', 'Please enter a valid email address.');
         return;

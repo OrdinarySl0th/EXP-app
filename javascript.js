@@ -17,11 +17,11 @@ console.log("Application starting...");
 // Classes
 class ExperienceTracker {
     constructor(experiences = []) {
-        this.experiences = experiences;
+        this.experiences = experiences.map(exp => ({...exp, count: exp.count || 0}));
     }
 
     addExperience(amount, category) {
-        const newExp = {id: Date.now().toString(), amount, category};
+        const newExp = {id: Date.now().toString(), amount, category, count: 0};
         this.experiences.push(newExp);
         return newExp;
     }
@@ -39,6 +39,20 @@ class ExperienceTracker {
     deleteExperience(id) {
         this.experiences = this.experiences.filter(exp => exp.id !== id);
     }
+
+    incrementCount(id) {
+        const exp = this.experiences.find(exp => exp.id === id);
+        if (exp) {
+            exp.count = (exp.count || 0) + 1;
+        }
+    }
+
+    getTopActivities(n = 3) {
+        return this.experiences
+            .sort((a, b) => (b.count || 0) - (a.count || 0))
+            .slice(0, n)
+            .map(exp => exp.category);
+    }
 }
 
 function saveUserData(user) {
@@ -53,10 +67,10 @@ function saveUserData(user) {
         totalAccumulatedExp: user.totalAccumulatedExp,
         friends: user.friends,
         friendRequests: user.friendRequests
-    }, { merge: true })  // Use merge: true to update fields without overwriting the entire document
+    }, { merge: true })
     .catch(error => {
         console.error("Firestore save error:", error);
-        throw error;  // Re-throw the error to be caught by the calling function
+        throw error;
     });
 }
 
@@ -265,6 +279,7 @@ function loadUserData(user) {
             throw error;
         });
 }
+
 function showDashboard() {
     console.log("showDashboard function called");
     return new Promise((resolve, reject) => {
@@ -292,9 +307,17 @@ function showDashboard() {
                 });
             }
 
+            console.log("Before displayUserExperiences");
             displayUserExperiences();
+            console.log("After displayUserExperiences");
+
+            console.log("Before updateTotalExpDisplay");
             updateTotalExpDisplay();
+            console.log("After updateTotalExpDisplay");
+
+            console.log("Before displayFriendsList");
             displayFriendsList();
+            console.log("After displayFriendsList");
 
             console.log("Dashboard displayed successfully");
             resolve();
@@ -305,7 +328,6 @@ function showDashboard() {
         }
     });
 }
-
 function showRegister() {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
@@ -363,35 +385,39 @@ function addNewExperience() {
 
 function displayUserExperiences() {
     console.log("displayUserExperiences function called");
-    const experienceContainer = document.getElementById('experienceContainer');
-    if (!experienceContainer) {
-        console.error("Experience container not found");
-        return;
+    try {
+        const experienceContainer = document.getElementById('experienceContainer');
+        if (!experienceContainer) {
+            console.error("Experience container not found");
+            return;
+        }
+        experienceContainer.innerHTML = '';
+        
+        if (!currentUser || !currentUser.tracker || !currentUser.tracker.experiences) {
+            console.error("User data is not properly initialized");
+            experienceContainer.innerHTML = '<p>Error loading experiences. Please try logging out and back in.</p>';
+            return;
+        }
+        
+        console.log("Number of experiences:", currentUser.tracker.experiences.length);
+        
+        if (currentUser.tracker.experiences.length === 0) {
+            experienceContainer.innerHTML = '<p>No experiences added yet. Add your first experience above!</p>';
+        } else {
+            currentUser.tracker.experiences.forEach((exp) => {
+                try {
+                    const expElement = document.createElement('div');
+                    expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${exp.id}"> ${exp.category}: ${exp.amount.toFixed(2)}`;
+                    experienceContainer.appendChild(expElement);
+                } catch (error) {
+                    console.error("Error creating experience element:", error, exp);
+                }
+            });
+        }
+        console.log("Experiences displayed successfully");
+    } catch (error) {
+        console.error("Error in displayUserExperiences:", error);
     }
-    experienceContainer.innerHTML = '';
-    
-    if (!currentUser || !currentUser.tracker || !currentUser.tracker.experiences) {
-        console.error("User data is not properly initialized");
-        experienceContainer.innerHTML = '<p>Error loading experiences. Please try logging out and back in.</p>';
-        return;
-    }
-    
-    console.log("Number of experiences:", currentUser.tracker.experiences.length);
-    
-    if (currentUser.tracker.experiences.length === 0) {
-        experienceContainer.innerHTML = '<p>No experiences added yet. Add your first experience above!</p>';
-    } else {
-        currentUser.tracker.experiences.forEach((exp) => {
-            try {
-                const expElement = document.createElement('div');
-                expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${exp.id}"> ${exp.category}: ${exp.amount.toFixed(2)}`;
-                experienceContainer.appendChild(expElement);
-            } catch (error) {
-                console.error("Error creating experience element:", error, exp);
-            }
-        });
-    }
-    console.log("Experiences displayed successfully");
 }
 
 function editSelectedExperience() {
@@ -438,22 +464,43 @@ function deleteSelectedExperiences() {
 }
 
 function calculateLevel(totalExp, experiences) {
+    console.log("calculateLevel called with totalExp:", totalExp, "experiences:", experiences);
     let level = 0;
     let expThreshold = calculateThreshold(experiences, level);
-        
-    while (totalExp >= expThreshold) {
+    
+    // Prevent infinite loop by limiting iterations
+    const MAX_ITERATIONS = 1000;
+    let iterations = 0;
+    
+    while (totalExp >= expThreshold && iterations < MAX_ITERATIONS) {
         totalExp -= expThreshold;
         level++;
         expThreshold = calculateThreshold(experiences, level);
+        iterations++;
     }
-        
+    
+    if (iterations === MAX_ITERATIONS) {
+        console.warn("Max iterations reached in calculateLevel. This might indicate an issue with the experience data.");
+    }
+    
+    console.log("calculateLevel result:", level);
     return level;
 }
 
 function calculateThreshold(experiences, currentLevel) {
+    console.log("calculateThreshold called with experiences:", experiences, "currentLevel:", currentLevel);
     const totalCheckboxes = experiences.length;
     const sumOfExperiences = experiences.reduce((sum, exp) => sum + exp.amount, 0);
-    return totalCheckboxes * sumOfExperiences * (currentLevel + 1);
+    
+    // If there are no experiences, return a default threshold
+    if (totalCheckboxes === 0 || sumOfExperiences === 0) {
+        console.log("No experiences or sum is zero, returning default threshold");
+        return 100 * (currentLevel + 1);
+    }
+    
+    const threshold = totalCheckboxes * sumOfExperiences * (currentLevel + 1);
+    console.log("calculateThreshold result:", threshold);
+    return threshold;
 }
 
 function calcExp() {
@@ -470,6 +517,7 @@ function calcExp() {
         const experience = currentUser.tracker.experiences.find(exp => exp.id === expId);
         if (experience) {
             totalExp += experience.amount;
+            currentUser.tracker.incrementCount(expId);
         }
     });
     const totalChecked = checkboxes.length;
@@ -483,6 +531,7 @@ function calcExp() {
             showLevelUpModal(newLevel);
         }
         updateTotalExpDisplay();
+        displayUserExperiences();
         checkboxes.forEach(cb => cb.checked = false);
     }).catch((error) => {
         console.error("Error saving calculated experience:", error);
@@ -491,34 +540,64 @@ function calcExp() {
 }
 
 function calculateMaxExp(user) {
+    console.log("calculateMaxExp called with user:", user);
     if (!user || !user.tracker || !user.tracker.experiences) {
         console.error("Invalid user object for maxExp calculation");
         return 100; // Default value if user data is invalid
     }
 
     const currentLevel = calculateLevel(user.totalAccumulatedExp, user.tracker.experiences);
-    return calculateThreshold(user.tracker.experiences, currentLevel);
+    const maxExp = calculateThreshold(user.tracker.experiences, currentLevel);
+    console.log("calculateMaxExp result:", maxExp);
+    return maxExp;
 }
 
 
 function updateTotalExpDisplay() {
-    if (!currentUser) {
-        console.warn('No current user when updating exp display');
-        return;
+    console.log("updateTotalExpDisplay function called");
+    try {
+        if (!currentUser) {
+            console.warn('No current user when updating exp display');
+            return;
+        }
+
+        console.log("Calculating maxExp");
+        const maxExp = calculateMaxExp(currentUser);
+        console.log("maxExp calculated:", maxExp);
+
+        console.log("Calculating currentLevel");
+        const currentLevel = calculateLevel(currentUser.totalAccumulatedExp, currentUser.tracker.experiences);
+        console.log("currentLevel calculated:", currentLevel);
+
+        console.log("Calculating expForNextLevel");
+        const expForNextLevel = calculateThreshold(currentUser.tracker.experiences, currentLevel);
+        console.log("expForNextLevel calculated:", expForNextLevel);
+
+        console.log("Calculating remainingExp");
+        const remainingExp = Math.max(0, currentUser.totalAccumulatedExp - calculateThreshold(currentUser.tracker.experiences, currentLevel - 1));
+        console.log("remainingExp calculated:", remainingExp);
+
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            console.log("Updating progress bar");
+            progressBar.max = Math.max(1, expForNextLevel); // Ensure max is at least 1
+            progressBar.value = remainingExp;
+        } else {
+            console.warn("Progress bar element not found");
+        }
+
+        const totalExpDisplay = document.getElementById('totalExpDisplay');
+        if (totalExpDisplay) {
+            console.log("Updating total exp display");
+            totalExpDisplay.textContent = `Total Experience: ${currentUser.totalAccumulatedExp} (Level ${currentLevel}, ${remainingExp}/${expForNextLevel})`;
+        } else {
+            console.warn("Total exp display element not found");
+        }
+
+        console.log("Total exp display updated successfully");
+    } catch (error) {
+        console.error("Error in updateTotalExpDisplay:", error);
     }
-
-    const maxExp = calculateMaxExp(currentUser);
-    const currentLevel = calculateLevel(currentUser.totalAccumulatedExp, currentUser.tracker.experiences);
-    const expForNextLevel = calculateThreshold(currentUser.tracker.experiences, currentLevel);
-    const remainingExp = currentUser.totalAccumulatedExp - calculateThreshold(currentUser.tracker.experiences, currentLevel - 1);
-
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        progressBar.max = expForNextLevel;
-        progressBar.value = remainingExp;
-    }
-
-    document.getElementById('totalExpDisplay').textContent = `Total Experience: ${currentUser.totalAccumulatedExp} (Level ${currentLevel}, ${remainingExp}/${expForNextLevel})`;
 }
 
 function showLevelUpModal(level) {
@@ -542,33 +621,52 @@ function showLevelUpModal(level) {
 }
 
 function resetProgress() {
-    if (confirm("Are you sure you want to reset your progress? This action cannot be undone.")) {
-        currentUser.totalAccumulatedExp = 0;
-        updateTotalExpDisplay();
-        saveUserData(currentUser)
-            .then(() => {
-                alert("Progress reset successfully!");
-            })
-            .catch((error) => {
-                console.error("Error resetting progress:", error);
-                alert("Failed to reset progress. Please try again.");
+    showConfirmModal(
+        "Are you sure you want to reset your progress? This will reset your total experience, level, and all activity check counts to zero. This action cannot be undone.",
+        () => {
+            currentUser.totalAccumulatedExp = 0;
+            // Reset all activity counts to zero
+            currentUser.tracker.experiences.forEach(exp => {
+                exp.count = 0;
             });
-    }
+            updateTotalExpDisplay();
+            displayUserExperiences();
+            saveUserData(currentUser)
+                .then(() => {
+                    showMessageModal("Success", "Progress reset successfully! All experience, levels, and activity counts have been set to zero.");
+                })
+                .catch((error) => {
+                    console.error("Error resetting progress:", error);
+                    showMessageModal("Error", "Failed to reset progress. Please try again.");
+                });
+        }
+    );
 }
 
 
 // Function to show the reset confirmation modal
-function showResetConfirmModal() {
-    const modal = document.getElementById('resetConfirmModal');
+function showConfirmModal(message, onConfirm) {
+    const modal = document.getElementById('confirmModal');
+    const messageElement = document.getElementById('confirmMessage');
+    const confirmButton = document.getElementById('confirmAction');
+    const cancelButton = document.getElementById('cancelAction');
+
+    messageElement.textContent = message;
     modal.style.display = 'block';
 
-    document.getElementById('confirmReset').onclick = function() {
+    confirmButton.onclick = function() {
         modal.style.display = 'none';
-        performReset();
+        onConfirm();
     };
 
-    document.getElementById('cancelReset').onclick = function() {
+    cancelButton.onclick = function() {
         modal.style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
     };
 }
 
@@ -683,7 +781,7 @@ function acceptFriendRequest(friendId) {
     })
     .then(() => {
         showMessageModal('Success', 'Friend request accepted.');
-        refreshFriendData();
+        displayFriendsList(); // Refresh the friends list
     })
     .catch((error) => {
         console.error('Error accepting friend request:', error);
@@ -692,22 +790,73 @@ function acceptFriendRequest(friendId) {
 }
 
 function displayFriendsList() {
-    const friendsList = document.getElementById('friendsList');
-    friendsList.innerHTML = '';
-    currentUser.friends.forEach(friendId => {
-        db.collection('users').doc(friendId).get()
-            .then((doc) => {
-                if (doc.exists) {
-                    const friendData = doc.data();
-                    const listItem = document.createElement('li');
-                    listItem.textContent = friendData.username;
-                    friendsList.appendChild(listItem);
-                }
-            })
-            .catch((error) => {
-                console.error('Error getting friend data:', error);
+    console.log("displayFriendsList function called");
+    try {
+        const friendsList = document.getElementById('friendsList');
+        const friendRequestsList = document.getElementById('friendRequestsList');
+        friendsList.innerHTML = '';
+        friendRequestsList.innerHTML = '';
+
+        if (!currentUser) {
+            console.warn('No user data available');
+            friendsList.innerHTML = '<p>No friends data available.</p>';
+            friendRequestsList.innerHTML = '<p>No friend requests available.</p>';
+            return;
+        }
+
+        // Display friends
+        if (currentUser.friends && currentUser.friends.length > 0) {
+            currentUser.friends.forEach(friendId => {
+                db.collection('users').doc(friendId).get()
+                    .then((doc) => {
+                        if (doc.exists) {
+                            const friendData = doc.data();
+                            const listItem = document.createElement('li');
+                            const friendLevel = calculateLevel(friendData.totalAccumulatedExp, friendData.experiences);
+                            const topActivities = new ExperienceTracker(friendData.experiences).getTopActivities();
+                            listItem.innerHTML = `
+                                <strong>${friendData.username}</strong> (Level ${friendLevel})
+                                <br>Top activities: ${topActivities.join(', ')}
+                            `;
+                            friendsList.appendChild(listItem);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error getting friend data:', error);
+                    });
             });
-    });
+        } else {
+            friendsList.innerHTML = '<p>No friends added yet.</p>';
+        }
+
+        // Display friend requests (unchanged)
+        if (currentUser.friendRequests && currentUser.friendRequests.length > 0) {
+            currentUser.friendRequests.forEach(requesterId => {
+                db.collection('users').doc(requesterId).get()
+                    .then((doc) => {
+                        if (doc.exists) {
+                            const requesterData = doc.data();
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `${requesterData.username} wants to be your friend`;
+                            const acceptButton = document.createElement('button');
+                            acceptButton.textContent = 'Accept';
+                            acceptButton.onclick = () => acceptFriendRequest(requesterId);
+                            listItem.appendChild(acceptButton);
+                            friendRequestsList.appendChild(listItem);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error getting friend request data:', error);
+                    });
+            });
+        } else {
+            friendRequestsList.innerHTML = '<p>No pending friend requests.</p>';
+        }
+
+        console.log("Friends list and requests displayed successfully");
+    } catch (error) {
+        console.error("Error in displayFriendsList:", error);
+    }
 }
 
 function showMessageModal(title, message) {

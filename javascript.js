@@ -64,6 +64,8 @@ function saveUserData(user) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
     document.getElementById('loginButton').addEventListener('click', login);
     document.getElementById('registerButton').addEventListener('click', showRegister);
     document.getElementById('backToLoginButton').addEventListener('click', showLogin);
@@ -97,51 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let currentUser = null;
 
-firebase.auth().onAuthStateChanged(function(user) {
-    console.log("Auth state changed. User:", user ? user.uid : "No user");
-    if (user) {
-        console.log("User is signed in, loading user data...");
-        loadUserData(user).then((loadedUser) => {
-            console.log("User data loaded:", loadedUser);
-            currentUser = loadedUser;
-            showDashboard();
-        }).catch((error) => {
-            console.error("Error loading user data:", error);
-            showMessageModal("Error", "Failed to load user data. Please try logging in again.");
-        });
-    } else {
-        console.log("No user signed in, showing login form");
-        currentUser = null;
-        showLogin();
-    }
-});
-
-// User management functions
-function register() {
-    const username = document.getElementById('newUsername').value.trim();
-    const password = document.getElementById('newPassword').value;
-    if (!username || !password) {
-        showMessageModal("Error", "Username and password cannot be empty!");
-        return;
-    }
-    auth.createUserWithEmailAndPassword(username, password)
-        .then((userCredential) => {
-            return userCredential.user.updateProfile({
-                displayName: username
-            });
-        })
-        .then(() => {
-            showMessageModal("Success", "Registration successful! Please log in.");
-            showLogin();
-        })
-        .catch((error) => {
-            showMessageModal("Error", "Registration failed: " + error.message);
-        });
-}
-
-// ... (previous code remains the same)
-
 function login() {
+    console.log("Login function called");
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     
@@ -155,7 +114,7 @@ function login() {
 
     auth.signInWithEmailAndPassword(username, password)
         .then((userCredential) => {
-            console.log("Login successful for user:", userCredential.user.uid);
+            console.log("Firebase authentication successful for user:", userCredential.user.uid);
             return loadUserData(userCredential.user);
         })
         .then((loadedUser) => {
@@ -163,21 +122,74 @@ function login() {
                 throw new Error("Failed to load user data");
             }
             currentUser = loadedUser;
-            console.log("User data loaded:", currentUser);
-            showDashboard();
+            console.log("User data loaded successfully:", currentUser);
+            return showDashboard();
+        })
+        .then(() => {
+            console.log("Dashboard displayed successfully");
         })
         .catch((error) => {
-            console.error("Login error:", error.code, error.message);
+            console.error("Login error:", error);
             let errorMessage = "Login failed. ";
+            if (error.code) {
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage += "No user found with this username.";
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage += "Incorrect password.";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += "Invalid username format.";
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+            } else {
+                errorMessage += error.message || "An unexpected error occurred.";
+            }
+            showMessageModal("Error", errorMessage);
+            showLogin(); // Ensure login form is displayed in case of error
+        });
+}
+
+function register() {
+    console.log("Register function called");
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value;
+    
+    console.log("Attempting to register with username:", username);
+    
+    if (!username || !password) {
+        console.error("Username or password is empty");
+        showMessageModal("Error", "Username and password cannot be empty!");
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(username, password)
+        .then((userCredential) => {
+            console.log("User registered successfully:", userCredential.user.uid);
+            return userCredential.user.updateProfile({
+                displayName: username
+            });
+        })
+        .then(() => {
+            console.log("User profile updated successfully");
+            showMessageModal("Success", "Registration successful! Please log in.");
+            showLogin();
+        })
+        .catch((error) => {
+            console.error("Registration error:", error.code, error.message);
+            let errorMessage = "Registration failed. ";
             switch(error.code) {
-                case 'auth/user-not-found':
-                    errorMessage += "No user found with this username.";
-                    break;
-                case 'auth/wrong-password':
-                    errorMessage += "Incorrect password.";
+                case 'auth/email-already-in-use':
+                    errorMessage += "This email is already registered.";
                     break;
                 case 'auth/invalid-email':
-                    errorMessage += "Invalid username format.";
+                    errorMessage += "Invalid email format.";
+                    break;
+                case 'auth/weak-password':
+                    errorMessage += "Password is too weak.";
                     break;
                 default:
                     errorMessage += error.message;
@@ -186,70 +198,112 @@ function login() {
         });
 }
 
+function logout() {
+    console.log("Logout function called");
+    firebase.auth().signOut()
+        .then(() => {
+            console.log('User signed out');
+            currentUser = null;
+            // Clear any cached data or reset application state here
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            console.log("Login form displayed after logout");
+            // Clear any input fields or reset UI elements
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        })
+        .catch((error) => {
+            console.error('Logout error', error);
+            showMessageModal("Error", 'An error occurred during logout. Please try again.');
+        });
+}
+
 function loadUserData(user) {
     console.log("Loading user data for:", user.uid);
-    return db.collection('users').doc(user.uid).get().then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            console.log("Firestore data:", data);
-            return {
-                uid: user.uid,
-                displayName: user.displayName || data.username,
-                tracker: new ExperienceTracker(data.experiences || []),
-                totalAccumulatedExp: data.totalAccumulatedExp || 0,
-                friends: data.friends || [],
-                friendRequests: data.friendRequests || []
-            };
-        } else {
-            console.log("No user document found, creating new user data");
-            return {
-                uid: user.uid,
-                displayName: user.displayName,
-                tracker: new ExperienceTracker(),
-                totalAccumulatedExp: 0,
-                friends: [],
-                friendRequests: []
-            };
+    
+    return db.collection('users').doc(user.uid).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                console.log("Existing user document found:", data);
+                return {
+                    uid: user.uid,
+                    displayName: user.displayName || data.username,
+                    tracker: new ExperienceTracker(data.experiences || []),
+                    totalAccumulatedExp: data.totalAccumulatedExp || 0,
+                    friends: data.friends || [],
+                    friendRequests: data.friendRequests || []
+                };
+            } else {
+                console.log("No user document found, creating new user data");
+                const newUserData = {
+                    uid: user.uid,
+                    displayName: user.displayName,
+                    experiences: [],
+                    totalAccumulatedExp: 0,
+                    friends: [],
+                    friendRequests: []
+                };
+                
+                // Create a new document in Firestore
+                return db.collection('users').doc(user.uid).set(newUserData)
+                    .then(() => {
+                        console.log("New user document created successfully");
+                        return {
+                            ...newUserData,
+                            tracker: new ExperienceTracker()
+                        };
+                    })
+                    .catch((error) => {
+                        console.error("Error creating new user document:", error);
+                        throw error;
+                    });
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading user data:", error);
+            throw error;
+        });
+}
+function showDashboard() {
+    console.log("showDashboard function called");
+    return new Promise((resolve, reject) => {
+        if (!currentUser) {
+            console.error("No current user when trying to show dashboard");
+            showMessageModal("Error", "An error occurred while loading your data. Please try logging in again.");
+            reject(new Error("No current user"));
+            return;
+        }
+        console.log("Current user:", currentUser);
+
+        try {
+            // supposed to display main content window
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            console.log("Main content display set to block");
+
+            // Ensure user has an experiences array
+            if (!currentUser.tracker || !currentUser.tracker.experiences) {
+                console.log("Initializing experiences array for user");
+                currentUser.tracker = new ExperienceTracker([]);
+                saveUserData(currentUser).catch(error => {
+                    console.error("Error saving initialized user data:", error);
+                });
+            }
+
+            displayUserExperiences();
+            updateTotalExpDisplay();
+            displayFriendsList();
+
+            console.log("Dashboard displayed successfully");
+            resolve();
+        } catch (error) {
+            console.error("Error in showDashboard:", error);
+            showMessageModal("Error", "An error occurred while displaying the dashboard. Please try logging in again.");
+            reject(error);
         }
     });
-}
-
-function showDashboard() {
-    console.log("Showing dashboard for user:", currentUser);
-    if (!currentUser) {
-        console.error("No current user when trying to show dashboard");
-        showMessageModal("Error", "An error occurred while loading your data. Please try logging in again.");
-        return;
-    }
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    displayUserExperiences();
-    updateTotalExpDisplay();
-    displayFriendsList();
-}
-
-function logout() {
-    if (currentUser) {
-        saveUserData(currentUser)
-            .then(() => {
-                return firebase.auth().signOut();
-            })
-            .then(() => {
-                console.log('User signed out');
-                currentUser = null;
-                document.getElementById('mainContent').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-            })
-            .catch((error) => {
-                console.error('Logout error', error);
-                showMessageModal("Error", 'An error occurred during logout. Please try again.');
-            });
-    } else {
-        console.log('No user is currently logged in');
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    }
 }
 
 function showRegister() {
@@ -308,28 +362,36 @@ function addNewExperience() {
 }
 
 function displayUserExperiences() {
-    console.log("Displaying user experiences");
+    console.log("displayUserExperiences function called");
     const experienceContainer = document.getElementById('experienceContainer');
     if (!experienceContainer) {
         console.error("Experience container not found");
         return;
     }
     experienceContainer.innerHTML = '';
+    
     if (!currentUser || !currentUser.tracker || !currentUser.tracker.experiences) {
         console.error("User data is not properly initialized");
         experienceContainer.innerHTML = '<p>Error loading experiences. Please try logging out and back in.</p>';
         return;
     }
+    
+    console.log("Number of experiences:", currentUser.tracker.experiences.length);
+    
     if (currentUser.tracker.experiences.length === 0) {
         experienceContainer.innerHTML = '<p>No experiences added yet. Add your first experience above!</p>';
     } else {
         currentUser.tracker.experiences.forEach((exp) => {
-            const expElement = document.createElement('div');
-            expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${exp.id}"> ${exp.category}: ${exp.amount}`;
-            experienceContainer.appendChild(expElement);
+            try {
+                const expElement = document.createElement('div');
+                expElement.innerHTML = `<input type="checkbox" class="experience-checkbox" data-id="${exp.id}"> ${exp.category}: ${exp.amount.toFixed(2)}`;
+                experienceContainer.appendChild(expElement);
+            } catch (error) {
+                console.error("Error creating experience element:", error, exp);
+            }
         });
     }
-    console.log("Experiences displayed:", currentUser.tracker.experiences.length);
+    console.log("Experiences displayed successfully");
 }
 
 function editSelectedExperience() {
@@ -693,3 +755,10 @@ function showConfirmModal(message, onConfirm) {
         }
     };
 }
+// Global error handler
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error("Unhandled error:", message, "at", source, ":", lineno, ":", colno);
+    console.error("Error object:", error);
+    showMessageModal("Error", "An unexpected error occurred. Please try refreshing the page.");
+    return true;
+};

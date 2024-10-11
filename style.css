@@ -38,7 +38,7 @@ h1 {
 .checkbox-container {
     background-color: var(--text-color);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px;
     backdrop-filter: blur(8px);
     animation: slideIn 0.3s ease-out;
 }
@@ -106,7 +106,7 @@ button:active {
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 15px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.4s;
     font-size: 1em;
@@ -157,20 +157,21 @@ button:active {
     background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
-    border: 1px solid #888;
+    border: var(--secondary-color);
     width: 80%;
     max-width: 400px;
     text-align: center;
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
 .modal-content button {
     margin: 10px;
     padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 16px;
+    color: white;
 }
 
 #closeModal {
@@ -178,7 +179,7 @@ button:active {
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 16px;
 }
@@ -197,7 +198,7 @@ button:active {
     width: 200px;
     padding: 35px;
     background-color: var(--text-color);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: 0 15px 40px rgba(0, 121, 50, 0.3);
     backdrop-filter: blur(10px);
     align-self: flex-start;
@@ -212,7 +213,7 @@ button:active {
     margin-right: 10px;
     background-color: white;
     color: var(--text-color);
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
 #friendRequestsList, #friendsList {

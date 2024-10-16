@@ -3,24 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Level Up</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>LevelUp - User Profile</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="loginForm" class="form-container">
         <h1>Login</h1>
-        <p class="instruction-text">Use your credentials to log in, otherwise register to make an account!</p> 
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button id="loginButton" class="primary-button">Login</button>
-        <button id="registerButton" class="secondary-button">Register</button>
+        <p>Use your credentials to log in, otherwise register to make an account!</p>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="loginButton">Login</button>
+        <button id="registerButton">Register</button>
     </div>
-    
+
+    <div id="registerForm" class="form-container" style="display: none;">
+        <h1>Register</h1>
+        <p>Enter a valid email and custom password.</p>
+        <input type="text" id="newUsername" placeholder="Email" required>
+        <input type="password" id="newPassword" placeholder="Password" required>
+        <button id="registerSubmitButton">Register</button>
+        <button id="backToLoginButton">Back to Login</button>
+    </div>
+
+    <div id="userProfile" style="display: none;">
+        <h1>Welcome, <span id="profileUsername"></span>!</h1>
+        
+        <div class="profile-container">
+            <img id="profilePicture" alt="Profile Picture">
+            <div class="profile-picture-controls">
+                <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                <button id="uploadProfilePicture">Upload New Picture</button>
+                <button id="removeProfilePicture">Remove Picture</button>
+                <button id="logoutButton" class="logout-button">Logout</button>
+            </div>
+            <p id="userLevel">Level: <span id="currentLevel"></span></p>
+            <progress id="progressBar" value="0" max="100"></progress>
+            <p id="totalExpDisplay"></p>
+        </div>
+
+        <div class="activities">
+            <div class="section experience-list">
+                <div class="checkbox-container">
+                    <h2>Your Activities</h2>
+                    <div class="add-experience">
+                        <input type="text" id="newExpName" placeholder="Activity Name">
+                        <input type="number" id="newExpValue" placeholder="Experience Value" min="0" max="5" step="0.01">
+                        <button id="addExperienceButton">Add Activity</button>
+                    </div>
+                    <div id="experienceContainer"></div>
+                </div>
+                <div class="button-container">
+                    <button id="calcExpButton">Get EXP!</button>
+                    <button id="editButton">Edit Selected</button>
+                    <button id="deleteButton">Delete Selected</button>
+                    <button id="resetbarbutton">Reset Progress</button>
+                </div>
+            </div>
+            
+            <div class="friend-management">
+                <div class="send-request">
+                    <input type="text" id="friendEmail" placeholder="Friend's Email">
+                    <button id="sendFriendRequest" class="button-container">Send Friend Request</button>
+                </div>
+                <div class="friend-requests">
+                    <h3>Friend Requests</h3>
+                    <ul id="friendRequestsList"></ul>
+                </div>
+                <div class="friends-list">
+                    <h3>Friends List</h3>
+                    <ul id="friendsList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="resetConfirmModal" class="modal">
         <div class="modal-content">
             <h2>Confirm Reset</h2>
@@ -38,69 +94,6 @@
         </div>
     </div>
 
-    <div id="registerForm" class="form-container" style="display: none;">
-        <h1>Register</h1>
-        <p class="instruction-text">Enter a valid email and custom password.</p> 
-        <input type="text" id="newUsername" placeholder="Username">
-        <input type="password" id="newPassword" placeholder="Password">
-        <button id="registerSubmitButton" class="primary-button">Register</button>
-        <button id="backToLoginButton" class="secondary-button">Back to Login</button>
-    </div>
-
-    <main id="mainContent" style="display: none;">
-        <h1>Welcome to LvlUp!</h1>
-        <p class="instruction-text">
-            An Activity should be something you can do everyday to work towards a goal.<br>
-            ex. My goal is to get into better shape. <br>
-            ex. An activity to help me achieve this goal is to walk every day. <br>
-            Name the activity Walk and assign an experience value to that activity.<br>
-            Once the activity has been made you can click the checkbox and then "Get EXP!" to see your progress!<br>
-            I am constantly updating the website so please let me know if anything is wrong and i will fix it ASAP! <br>
-        </p> 
-        
-        <section class="Add-experience">
-            <h2>Add New Activity</h2>
-            <input type="text" id="newExpName" placeholder="Activity Name">
-            <input type="number" id="newExpValue" placeholder="Activity Value">
-            <button id="addExperienceButton" class="primary-button">Add Activity</button>
-            <button id="resetbarbutton" class="primary-button">Reset Progress</button>
-        </section>
-
-        <div class="activities">
-            <section class="experience-list">
-                <h2>Your Activities</h2>
-                <div id="experienceContainer" class="checkbox-container"></div>
-            </section>
-            <div class="friend-management">
-                <div class="send-request">
-                    <input type="email" id="friendEmail" placeholder="Friend's email"> 
-                    <button id="sendFriendRequest" class="minor-button">Send Friend Request</button>
-                </div>
-                <div class="friend-requests">
-                    <h3>Friend Requests</h3>
-                    <ul id="friendRequestsList">
-                    <!-- Friend requests will be dynamically added here -->
-                    </ul>
-                </div>
-                <div class="friends-list">
-                    <h3>Friends List</h3>
-                    <ul id="friendsList">
-                    <!-- Friends will be dynamically added here -->
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="button-container">
-            <button id="calcExpButton" class="left-button">Get EXP!</button>
-            <button id="editButton" class="middle-button">Edit Selected</button>
-            <button id="deleteButton" class="right-button">Delete Selected</button>
-            <button id="logoutButton" class="logout-button">Logout</button>
-        </div>
-        <p id="totalExpDisplay">Total Experience: 0</p>
-        <progress id="progressBar" value="0" max="100"></progress>
-    </main>
-
     <div id="levelUpModal" class="modal">
         <div class="modal-content">
             <h2>Level Up!</h2>
@@ -108,24 +101,20 @@
             <button id="closeModal">Close</button>
         </div>
     </div>
-    <div id="messageModal" class="modal">
-        <div class="modal-content">
-            <h2 id="messageTitle"></h2>
-            <p id="messageText"></p>
-            <button id="closeMessageModal">Close</button>
-        </div>
-    </div>
-    
-    <!-- Confirm Modal -->
+
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <h2>Confirmation</h2>
             <p id="confirmMessage"></p>
-            <button id="confirmAction" class="primary-button">Confirm</button>
-            <button id="cancelAction" class="primary-button">Cancel</button>
+            <button id="confirmAction">Confirm</button>
+            <button id="cancelAction">Cancel</button>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <script src="javascript.js"></script>
 </body>
 </html>

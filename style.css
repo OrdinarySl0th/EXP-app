@@ -17,18 +17,110 @@ body {
     line-height: 1.6;
 }
 
-h1 {
+h1, h2, h3 {
     color: var(--secondary-color);
     text-align: center;
     margin-bottom: 30px;
+}
+
+h1 {
     font-size: calc(2rem + 1vw);
 }
 
+/* Button styles */
+button {
+    padding: 5px 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.4s;
+    font-size: 1em;
+}
+
+button:active {
+    transform: scale(0.75);
+}
+
+.minor-button {
+    padding: 5px 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Form styles */
+.form-container {
+    background-color: var(--container-color);
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-container input {
+    width: 94.5%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--secondary-color);
+}
+
+.form-container button {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* Profile styles */
+.profile-container {
+    background-color: var(--text-color);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    width: 96%;
+}
+
+#profilePicture {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.profile-picture-controls {
+    margin-bottom: 20px;
+}
+
+.profile-picture-controls button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.logout-button {
+    padding: 5px 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Activities styles */
 .activities {
     display: flex;
     gap: 50px;
     margin-top: 20px;
-
 }
 
 .section.experience-list {
@@ -38,7 +130,7 @@ h1 {
 .checkbox-container {
     background-color: var(--text-color);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     backdrop-filter: blur(8px);
     animation: slideIn 0.3s ease-out;
 }
@@ -54,15 +146,64 @@ h1 {
     }
 }
 
-.checkbox-item {
+.checkbox-container h2 {
+    color: var(--secondary-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.add-experience {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.add-experience input {
+    flex: 1;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid var(--secondary-color);
+}
+
+.add-experience button {
+    padding: 5px 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#experienceContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.experience-column {
+    flex-basis: calc(33.333% - 14px);
+}
+
+.experience-item {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     transition: transform 0.2s;
 }
 
-.checkbox-item:hover {
+.experience-item:hover {
     transform: translateX(5px);
+}
+
+.experience-checkbox {
+    margin-right: 10px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 20px 0;
 }
 
 progress {
@@ -74,60 +215,12 @@ progress {
 }
 
 progress::-webkit-progress-bar {
-    background-color: var(--text-color);
+    background-color: var(--container-color);
 }
 
 progress::-webkit-progress-value {
     background: linear-gradient(85deg, var(--secondary-color), #00a86b);
     transition: width 1.05s ease-out;
-}
-
-.button-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 20px 0;
-}
-
-button:active {
-    transform: scale(0.75);
-}
-
-/* Specific button styles */
-.action-button,
-.primary-button,
-.secondary-button,
-.left-button,
-.right-button,
-.middle-button,
-.logout-button,
-#calcExpButton {
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.4s;
-    font-size: 1em;
-}
-
-.minor-button,
-#minor-button {
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    padding: 10px 9px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.4s;
-    font-size: 0.9em;
-}
-
-.logout-button {
-    position: absolute;
-    top: 85px;
-    right: 150px;
 }
 
 #totalExpDisplay {
@@ -141,6 +234,67 @@ button:active {
     color: transparent;
 }
 
+/* Friend management styles */
+/* ... (previous styles remain the same) ... */
+
+/* Friend management styles */
+.friend-management {
+    width: 200px;
+    padding: 35px;
+    background-color: var(--text-color);
+    border-radius: 8px;
+    box-shadow: 0 15px 40px rgba(0, 121, 50, 0.3);
+    backdrop-filter: blur(10px);
+    align-self: flex-start;
+}
+
+.send-request {
+    margin-bottom: 10px;
+}
+
+#friendEmail {
+    padding: 5px;
+    margin-right: 10px;
+    background-color: white;
+    color: var(--text-color);
+    border-radius: 5px;
+}
+
+#friendRequestsList, #friendsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#friendRequestsList li, #friendsList li {
+    margin-bottom: 15px;
+    color: var(--secondary-color);
+}
+
+.friend-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.friend-info {
+    display: flex;
+    align-items: flex-start;
+}
+
+.friend-profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.friend-details {
+    flex: 1;
+}
+
+/* ... (rest of the styles remain the same) ... */
+
+/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -157,82 +311,38 @@ button:active {
     background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
-    border: var(--secondary-color);
+    border: 1px solid #888;
     width: 80%;
     max-width: 400px;
     text-align: center;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 
 .modal-content button {
     margin: 10px;
     padding: 10px 20px;
     border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-}
-
-#closeModal {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 10px;
+    border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
 }
 
-#confirmReset {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-#cancelReset, #closeMessageModal {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-.friend-management {
-    width: 200px;
-    padding: 35px;
-    background-color: var(--text-color);
-    border-radius: 10px;
-    box-shadow: 0 15px 40px rgba(0, 121, 50, 0.3);
-    backdrop-filter: blur(10px);
-    align-self: flex-start;
-}
-
-.send-request {
-    margin-bottom: 10px;
-}
-
-#friendEmail {
-    padding: 5px;
-    margin-right: 10px;
-    background-color: white;
-    color: var(--text-color);
-    border-radius: 10px;
-}
-
-#friendRequestsList, #friendsList {
-    list-style-type: none;
-    padding: 0;
-}
-
-#friendRequestsList li, #friendsList li {
-    margin-bottom: 5px;
-    color: var(--secondary-color);
-}
-
-@media (max-width: 800px) {
-    .activities-and-friends {
+/* Responsive styles */
+@media (max-width: 768px) {
+    .activities {
         flex-direction: column;
     }
 
     .friend-management {
         width: 100%;
         margin-top: 20px;
+    }
+
+    .experience-column {
+        flex-basis: 100%;
+    }
+
+    .add-experience {
+        flex-direction: column;
     }
 }
